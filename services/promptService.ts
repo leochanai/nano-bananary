@@ -44,13 +44,15 @@ export async function loadCustomPromptMap(): Promise<PromptMap> {
   return await getJson<PromptMap>('/api/prompts/custom');
 }
 
-export async function upsertCustomPrompt(params: { key?: string; name: string; prompt: string }): Promise<{ key: string }> {
+export async function upsertCustomPrompt(params: { key?: string; name: string; prompt: string; icon?: string; type?: TransformationCategory }): Promise<{ key: string }> {
   const body = {
     key: params.key,
     en_name: params.name,
     zh_name: params.name,
     en_prompt: params.prompt,
     zh_prompt: params.prompt,
+    icon: params.icon,
+    type: params.type,
   } as const;
   const resp = await postJson<{ ok: boolean; key: string }>('/api/prompts/custom', body);
   if (!resp.ok) throw new Error('Failed to upsert custom prompt');
@@ -128,14 +130,14 @@ export function usePromptEffects(lang: SupportedLanguage) {
 
   const merged = useMemo(() => mergePromptMaps(defaultMap, customMap, lang), [defaultMap, customMap, lang]);
 
-  const create = useCallback(async (name: string, prompt: string) => {
-    const resp = await upsertCustomPrompt({ name, prompt });
+  const create = useCallback(async (name: string, prompt: string, icon?: string, type?: TransformationCategory) => {
+    const resp = await upsertCustomPrompt({ name, prompt, icon, type });
     await reload();
     return resp.key;
   }, [reload]);
 
-  const update = useCallback(async (key: string, name: string, prompt: string) => {
-    await upsertCustomPrompt({ key, name, prompt });
+  const update = useCallback(async (key: string, name: string, prompt: string, icon?: string, type?: TransformationCategory) => {
+    await upsertCustomPrompt({ key, name, prompt, icon, type });
     await reload();
   }, [reload]);
 

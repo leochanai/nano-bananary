@@ -66,7 +66,7 @@ export default defineConfig(({ mode }) => {
 
               if (url === '/api/prompts/custom' && req.method === 'POST') {
                 const body = await readBody(req);
-                const { key, en_name, zh_name, en_prompt, zh_prompt } = body || {};
+                const { key, en_name, zh_name, en_prompt, zh_prompt, icon, type } = body || {};
                 const data = readJsonSafe(customPath);
                 // 生成 key：未提供则使用时间戳
                 const k = typeof key === 'string' && key.trim() ? key.trim() : ('custom_' + Date.now());
@@ -77,6 +77,8 @@ export default defineConfig(({ mode }) => {
                   zh_name: (typeof zh_name === 'string' && zh_name.trim()) ? zh_name.trim() : name,
                   en_prompt: prompt,
                   zh_prompt: (typeof zh_prompt === 'string' && zh_prompt.trim()) ? zh_prompt.trim() : prompt,
+                  ...(typeof icon === 'string' && icon.trim() ? { icon: icon.trim() } : {}),
+                  ...(typeof type === 'string' && type.trim() ? { type: type.trim() } : {}),
                 };
                 const ok = writeJsonSafe(customPath, data);
                 res.setHeader('Content-Type', 'application/json');
