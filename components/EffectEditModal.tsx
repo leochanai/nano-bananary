@@ -40,7 +40,7 @@ const EffectEditModal: React.FC<EffectEditModalProps> = ({ open, mode, form, onC
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/70 p-4 animate-fade-in">
-      <div className="w-full max-w-xl rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-gray-950 shadow-2xl">
+      <div className="w-full max-w-3xl max-h-[85vh] overflow-auto rounded-xl border border-black/10 dark:border-white/10 bg-white dark:bg-gray-950 shadow-2xl">
         <div className="flex items-center justify-between px-4 py-3 border-b border-black/10 dark:border-white/10">
           <h3 className="font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <span className="material-symbols-outlined">{mode === 'edit' ? 'edit' : 'add'}</span>
