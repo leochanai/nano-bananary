@@ -2,7 +2,7 @@
   "lockfileVersion": 1,
   "workspaces": {
     "": {
-      "name": "🍌-nano-bananary｜zho",
+      "name": "🍌-nano-bananary",
       "dependencies": {
         "@google/genai": "^1.17.0",
         "react": "^19.1.1",

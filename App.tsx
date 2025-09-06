@@ -1,7 +1,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useI18n } from './i18n';
-import { TRANSFORMATIONS } from './constants';
+import { useTransformations } from './constants';
 import { editImage } from './services/geminiService';
 import type { GeneratedContent, Transformation } from './types';
 import TransformationSelector from './components/TransformationSelector';
@@ -84,7 +84,7 @@ const App: React.FC = () => {
 
       if (result.imageUrl) {
         // Embed invisible watermark
-        result.imageUrl = await embedWatermark(result.imageUrl, "Nano Bananary｜ZHO");
+        result.imageUrl = await embedWatermark(result.imageUrl, "Creative Banana");
       }
 
       setGeneratedContent(result);
@@ -144,7 +144,7 @@ const App: React.FC = () => {
       <header className="bg-black/60 backdrop-blur-lg sticky top-0 z-20 p-4 border-b border-white/10">
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400 cursor-pointer" onClick={handleResetApp}>
-            🍌 Nano Bananary｜ZHO
+            🍌 Creative Banana
           </h1>
           <div className="flex items-center gap-2">
             <button onClick={() => setLang('zh')} className={`px-2 py-1 text-sm rounded ${lang === 'zh' ? 'bg-orange-500 text-black' : 'bg-gray-800 text-gray-300'}`}>中文</button>
@@ -156,7 +156,7 @@ const App: React.FC = () => {
       <main>
         {!selectedTransformation ? (
           <TransformationSelector 
-            transformations={TRANSFORMATIONS} 
+            transformations={useTransformations()} 
             onSelect={handleSelectTransformation} 
             hasPreviousResult={!!imagePreviewUrl}
           />
