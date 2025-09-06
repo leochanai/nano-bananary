@@ -10,7 +10,7 @@ export function useTransformations(): Transformation[] {
   return merged.map((item) => ({
     title: item.title,
     prompt: item.prompt,
-    icon: item.key === 'custom_prompt' ? 'edit' : 'auto_awesome',
+    icon: item.icon || (item.key === 'custom_prompt' ? 'edit' : 'auto_awesome'),
     category: item.key === 'custom_prompt' ? 'custom' : undefined,
   }));
 }

@@ -122,7 +122,7 @@ export default function EffectManager() {
                       </button>
                     )}
                   </div>
-                  <span className="text-4xl mb-2 material-symbols-outlined">auto_awesome</span>
+                  <span className="text-4xl mb-2 material-symbols-outlined">{item.key === 'custom_prompt' ? 'edit' : 'auto_awesome'}</span>
                   <span className="font-semibold text-sm text-gray-900 dark:text-gray-200 line-clamp-2">{item.title}</span>
                 </div>
               ))}

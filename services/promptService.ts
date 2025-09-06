@@ -7,6 +7,7 @@ export interface PromptEntry {
   zh_name: string;
   en_prompt: string;
   zh_prompt: string;
+  icon?: string;
 }
 
 type PromptMap = Record<string, Omit<PromptEntry, 'key'>>;
@@ -68,6 +69,7 @@ export interface MergedPromptItem {
   key: string;
   title: string;
   prompt: string;
+  icon?: string;
   isBuiltin: boolean;
   isOverridden: boolean;
 }
@@ -85,7 +87,7 @@ export function mergePromptMaps(defaultMap: PromptMap, customMap: PromptMap, lan
     if (key === 'custom_prompt') {
       prompt = 'CUSTOM';
     }
-    items.push({ key, title, prompt, isBuiltin: !!d, isOverridden: !!(d && c) });
+    items.push({ key, title, prompt, icon: (c?.icon || d?.icon), isBuiltin: !!d, isOverridden: !!(d && c) });
   }
   // 稳定排序：先 custom_prompt，再内置（字母序），最后纯自定义（字母序）
   items.sort((a, b) => {
