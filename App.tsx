@@ -47,6 +47,10 @@ const App: React.FC = () => {
     }
   }, []);
 
+  const toggleLanguage = useCallback(() => {
+    setLang(lang === 'zh' ? 'en' : 'zh');
+  }, [lang, setLang]);
+
   const handleSelectTransformation = (transformation: Transformation) => {
     setSelectedTransformation(transformation);
     setGeneratedContent(null);
@@ -176,8 +180,14 @@ const App: React.FC = () => {
             >
               <span className="material-symbols-outlined align-middle">{isDark ? 'light_mode' : 'dark_mode'}</span>
             </button>
-            <button onClick={() => setLang('zh')} className={`px-2 py-1 text-sm rounded ${lang === 'zh' ? 'bg-orange-500 text-black' : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-300'}`}>中文</button>
-            <button onClick={() => setLang('en')} className={`px-2 py-1 text-sm rounded ${lang === 'en' ? 'bg-orange-500 text-black' : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-300'}`}>EN</button>
+            <button
+              onClick={toggleLanguage}
+              aria-label="切换语言"
+              title={lang === 'zh' ? 'Switch to English' : '切换到中文'}
+              className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <span className="material-symbols-outlined align-middle">translate</span>
+            </button>
           </div>
         </div>
       </header>
