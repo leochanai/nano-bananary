@@ -9,7 +9,7 @@ interface ErrorMessageProps {
 const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
   const { t } = useI18n();
   return (
-    <div className="w-full max-w-lg p-4 bg-red-900/50 border border-red-700 text-red-300 rounded-lg text-center" role="alert">
+    <div className="w-full max-w-lg p-4 bg-red-100 text-red-800 border border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700 rounded-lg text-center" role="alert">
       <p className="font-bold">{t('error.title')}</p>
       <p className="text-sm">{message}</p>
     </div>
