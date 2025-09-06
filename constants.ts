@@ -2,6 +2,7 @@
 import type { Transformation, TransformationCategory } from './types';
 import { useI18n } from './i18n';
 import { useUserEffects } from './services/effectStore';
+import { useBuiltinEffects } from './services/builtinStore';
 
 // NOTE: we only store emoji and prompt here; title is derived via i18n key
 export type TransformationKey =
@@ -121,13 +122,19 @@ export const TRANSFORMATION_SOURCES: TransformationSource[] = [
 export function useTransformations(): Transformation[] {
   const { t } = useI18n();
   const { effects } = useUserEffects();
+  const { disabledKeys, overrides } = useBuiltinEffects();
 
-  const builtin: Transformation[] = TRANSFORMATION_SOURCES.map(({ key, prompt, icon, category }) => ({
-    title: t(`transformations.${key}`),
-    prompt,
-    icon,
-    category,
-  }));
+  const builtin: Transformation[] = TRANSFORMATION_SOURCES
+    .filter(({ key }) => !disabledKeys.includes(key))
+    .map(({ key, prompt, icon, category }) => {
+      const ov = overrides[key] || {};
+      return {
+        title: (ov.title ?? t(`transformations.${key}`)) as string,
+        prompt: (ov.prompt ?? prompt) as string,
+        icon: (ov.icon ?? icon) as string,
+        category: (ov.category ?? category) as TransformationCategory,
+      };
+    });
 
   const user: Transformation[] = effects.map(e => ({
     title: e.title,

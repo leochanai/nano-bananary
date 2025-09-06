@@ -150,6 +150,8 @@ const RESOURCES: Resources = {
       chooseIcon: '选择图标',
       searchIcons: '搜索图标名称…',
       chooseStyle: '选择风格',
+      restore: '恢复',
+      showHidden: '显示已隐藏',
     },
   },
   en: {
@@ -295,6 +297,8 @@ const RESOURCES: Resources = {
       chooseIcon: 'Choose Icon',
       searchIcons: 'Search icon name…',
       chooseStyle: 'Choose Style',
+      restore: 'Restore',
+      showHidden: 'Show hidden',
     },
   },
 };
