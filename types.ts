@@ -14,6 +14,12 @@ export interface GeneratedContent {
   text: string | null;
 }
 
+export interface UploadedImage {
+  id: string;
+  file: File;
+  dataUrl: string;
+}
+
 // 分类类型：用于首页分类管理与搜索
 export type TransformationCategory =
   | 'custom'

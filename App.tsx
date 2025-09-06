@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { useI18n } from './i18n';
 import { useTransformations } from './constants';
 import { editImage } from './services/geminiService';
-import type { GeneratedContent, Transformation } from './types';
+import type { GeneratedContent, Transformation, UploadedImage } from './types';
 import TransformationSelector from './components/TransformationSelector';
 import ResultDisplay from './components/ResultDisplay';
 import LoadingSpinner from './components/LoadingSpinner';
@@ -12,6 +12,7 @@ import ImageEditorCanvas from './components/ImageEditorCanvas';
 import { dataUrlToFile, embedWatermark } from './utils/fileUtils';
 import ImagePreviewModal from './components/ImagePreviewModal';
 import EffectManager from './components/EffectManager';
+import ImageUploader from './components/ImageUploader';
 
 type ActiveTool = 'mask' | 'none';
 
@@ -20,6 +21,9 @@ const App: React.FC = () => {
   const [isManagingEffects, setIsManagingEffects] = useState<boolean>(false);
   const transformations = useTransformations();
   const [selectedTransformation, setSelectedTransformation] = useState<Transformation | null>(null);
+  // Multi-image state
+  const [images, setImages] = useState<UploadedImage[]>([]);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
@@ -29,6 +33,7 @@ const App: React.FC = () => {
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [activeTool, setActiveTool] = useState<ActiveTool>('none');
+  const [isMultiMode, setIsMultiMode] = useState<boolean>(false);
 
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof document === 'undefined') return true;
@@ -49,6 +54,46 @@ const App: React.FC = () => {
       try { localStorage.setItem('app.theme', 'light'); } catch {}
     }
   }, []);
+  const switchToMulti = useCallback(() => {
+    if (isMultiMode) return;
+    // Seed slot 1 with current single image if exists
+    let nextImages = images;
+    if (imagePreviewUrl && selectedFile && images.length === 0) {
+      const seeded: UploadedImage = { id: `${Date.now()}-${Math.random()}`, file: selectedFile, dataUrl: imagePreviewUrl };
+      nextImages = [seeded];
+      setImages(nextImages);
+    }
+    // Auto-activate first slot so user can generate immediately
+    if (nextImages.length > 0) {
+      setActiveIndex(0);
+      setSelectedFile(nextImages[0].file);
+      setImagePreviewUrl(nextImages[0].dataUrl);
+    } else {
+      setActiveIndex(null);
+      setSelectedFile(null);
+      setImagePreviewUrl(null);
+    }
+    setMaskDataUrl(null);
+    setActiveTool('none');
+    setGeneratedContent(null);
+    setError(null);
+    setIsMultiMode(true);
+  }, [isMultiMode, imagePreviewUrl, selectedFile, images.length]);
+
+  const switchToSingle = useCallback(() => {
+    if (!isMultiMode) return;
+    // Prefer active image, fallback to first slot
+    const idx = (activeIndex ?? 0);
+    const src = images[idx];
+    if (src) {
+      setSelectedFile(src.file);
+      setImagePreviewUrl(src.dataUrl);
+    } else {
+      setSelectedFile(null);
+      setImagePreviewUrl(null);
+    }
+    setIsMultiMode(false);
+  }, [isMultiMode, images, activeIndex]);
 
   const toggleLanguage = useCallback(() => {
     setLang(lang === 'zh' ? 'en' : 'zh');
@@ -75,6 +120,80 @@ const App: React.FC = () => {
     setMaskDataUrl(null);
     setActiveTool('none');
   }, []);
+
+  // Integrate ImageUploader
+  const addImages = useCallback((files: File[]) => {
+    const toRead = files.slice(0, Math.max(0, 3 - images.length));
+    const readers = toRead.map(file => new Promise<UploadedImage>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve({ id: `${Date.now()}-${Math.random()}`, file, dataUrl: reader.result as string });
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    }));
+    Promise.all(readers).then(newOnes => {
+      setImages(prev => {
+        const combined = [...prev, ...newOnes].slice(0, 3);
+        if (!isMultiMode) {
+          const nextActive = combined.length > 0 ? (prev.length === 0 ? 0 : activeIndex ?? 0) : null;
+          setActiveIndex(nextActive);
+          if (nextActive !== null) {
+            setSelectedFile(combined[nextActive].file);
+            setImagePreviewUrl(combined[nextActive].dataUrl);
+          }
+        } else {
+          // In multi-mode, if nothing is active, activate first slot so Generate can be used
+          if (combined.length > 0 && (activeIndex === null || !imagePreviewUrl)) {
+            setActiveIndex(0);
+            setSelectedFile(combined[0].file);
+            setImagePreviewUrl(combined[0].dataUrl);
+          }
+        }
+        return combined;
+      });
+      setMaskDataUrl(null);
+      setGeneratedContent(null);
+      setError(null);
+      setActiveTool('none');
+    });
+  }, [images.length, activeIndex, isMultiMode]);
+
+  const removeImageAt = useCallback((index: number) => {
+    setImages(prev => {
+      const next = prev.filter((_, i) => i !== index);
+      let nextActive: number | null = null;
+      if (next.length === 0) {
+        nextActive = null;
+      } else if (activeIndex !== null) {
+        if (index < activeIndex) nextActive = activeIndex - 1; else if (index === activeIndex) nextActive = Math.min(activeIndex, next.length - 1); else nextActive = activeIndex;
+      }
+      setActiveIndex(nextActive);
+      if (nextActive !== null) {
+        setSelectedFile(next[nextActive].file);
+        setImagePreviewUrl(next[nextActive].dataUrl);
+      } else {
+        setSelectedFile(null);
+        setImagePreviewUrl(null);
+      }
+      setGeneratedContent(null);
+      setError(null);
+      setMaskDataUrl(null);
+      setActiveTool('none');
+      return next;
+    });
+  }, [activeIndex]);
+
+  const activateImage = useCallback((index: number) => {
+    setActiveIndex(index);
+    const img = images[index];
+    if (img) {
+      setSelectedFile(img.file);
+      setImagePreviewUrl(img.dataUrl);
+      setGeneratedContent(null);
+      setError(null);
+      setMaskDataUrl(null);
+      setActiveTool('none');
+    }
+  }, [images]);
   
   const handleClearImage = () => {
     setImagePreviewUrl(null);
@@ -151,6 +270,8 @@ const App: React.FC = () => {
 
   const handleResetApp = () => {
     setSelectedTransformation(null);
+    setImages([]);
+    setActiveIndex(null);
     setImagePreviewUrl(null);
     setSelectedFile(null);
     setGeneratedContent(null);
@@ -253,13 +374,51 @@ const App: React.FC = () => {
                     )}
                   </div>
                   
-                  <ImageEditorCanvas
-                    onImageSelect={handleImageSelect}
-                    initialImageUrl={imagePreviewUrl}
-                    onMaskChange={setMaskDataUrl}
-                    onClearImage={handleClearImage}
-                    isMaskToolActive={activeTool === 'mask'}
-                  />
+                  {/* Mode Switch */}
+                  <div className="mb-3 flex items-center justify-between">
+                    <div className="inline-flex rounded-md overflow-hidden border border-black/10 dark:border-white/10">
+                      <button
+                        onClick={switchToSingle}
+                        className={`px-3 py-1 text-sm transition-colors ${!isMultiMode ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                      >
+                        {t('upload.singleMode')}
+                      </button>
+                      <button
+                        onClick={switchToMulti}
+                        className={`px-3 py-1 text-sm transition-colors ${isMultiMode ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
+                      >
+                        {t('upload.multipleMode')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Multi uploader */}
+                  {isMultiMode && (
+                    <ImageUploader
+                      images={images}
+                      activeIndex={activeIndex}
+                      onAdd={addImages}
+                      onRemove={removeImageAt}
+                      onActivate={activateImage}
+                      max={3}
+                      showSlots
+                    />
+                  )}
+
+                  {(!isMultiMode || imagePreviewUrl) && (
+                    <>
+                      <div className="mt-4" />
+                      <ImageEditorCanvas
+                        onImageSelect={handleImageSelect}
+                        initialImageUrl={imagePreviewUrl}
+                        onMaskChange={setMaskDataUrl}
+                        onClearImage={handleClearImage}
+                        isMaskToolActive={activeTool === 'mask'}
+                        disableUpload={isMultiMode}
+                        initialMaskUrl={maskDataUrl}
+                      />
+                    </>
+                  )}
 
                   {imagePreviewUrl && (
                     <div className="mt-4">

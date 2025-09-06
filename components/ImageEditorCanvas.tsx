@@ -8,9 +8,11 @@ interface ImageEditorCanvasProps {
   onMaskChange: (dataUrl: string | null) => void;
   onClearImage: () => void;
   isMaskToolActive: boolean;
+  disableUpload?: boolean;
+  initialMaskUrl?: string | null;
 }
 
-const ImageEditorCanvas: React.FC<ImageEditorCanvasProps> = ({ onImageSelect, initialImageUrl, onMaskChange, onClearImage, isMaskToolActive }) => {
+const ImageEditorCanvas: React.FC<ImageEditorCanvasProps> = ({ onImageSelect, initialImageUrl, onMaskChange, onClearImage, isMaskToolActive, disableUpload = false, initialMaskUrl = null }) => {
   
   const imageCanvasRef = useRef<HTMLCanvasElement>(null);
   const maskCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -22,6 +24,7 @@ const ImageEditorCanvas: React.FC<ImageEditorCanvasProps> = ({ onImageSelect, in
   const [lastPos, setLastPos] = useState<{ x: number; y: number } | null>(null);
   const [brushSize, setBrushSize] = useState(20);
   const [history, setHistory] = useState<ImageData[]>([]);
+  const [displayRect, setDisplayRect] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   const [isDragging, setIsDragging] = useState(false); // For file drop
 
@@ -63,6 +66,8 @@ const ImageEditorCanvas: React.FC<ImageEditorCanvasProps> = ({ onImageSelect, in
     imageCtx.clearRect(0, 0, imageCanvas.width, imageCanvas.height);
     imageCtx.drawImage(image, displayX, displayY, displayW, displayH);
 
+    setDisplayRect({ x: displayX, y: displayY, width: displayW, height: displayH });
+
   }, [image, getCanvasContexts]);
 
   useEffect(() => {
@@ -90,6 +95,21 @@ const ImageEditorCanvas: React.FC<ImageEditorCanvasProps> = ({ onImageSelect, in
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [draw, image]);
+
+  // Load initial mask when provided (e.g., switching active images)
+  useEffect(() => {
+    if (!initialMaskUrl) return;
+    const { maskCtx, maskCanvas } = getCanvasContexts();
+    if (!maskCtx || !maskCanvas) return;
+    const m = new Image();
+    m.crossOrigin = "anonymous";
+    m.onload = () => {
+      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      maskCtx.drawImage(m, 0, 0, maskCanvas.width, maskCanvas.height);
+      onMaskChange(maskCanvas.toDataURL());
+    };
+    m.src = initialMaskUrl;
+  }, [initialMaskUrl, getCanvasContexts, onMaskChange, image]);
 
   const saveToHistory = useCallback(() => {
     const { maskCtx, maskCanvas } = getCanvasContexts();
@@ -186,20 +206,33 @@ const ImageEditorCanvas: React.FC<ImageEditorCanvasProps> = ({ onImageSelect, in
     <div className="flex flex-col gap-4">
         <div
             ref={containerRef}
-            onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
+            {...(!disableUpload ? { onDrop: handleDrop, onDragOver: handleDragOver, onDragLeave: handleDragLeave } : {})}
             className={`relative w-full aspect-square bg-white dark:bg-black rounded-lg flex items-center justify-center transition-colors duration-200 select-none ${
             isDragging ? 'outline-dashed outline-2 outline-orange-500 bg-orange-500/10' : ''
             } ${initialImageUrl ? 'p-0' : 'p-4 border-2 border-dashed border-black/20 dark:border-white/20'}`}
         >
             {!initialImageUrl ? (
-                <label htmlFor="file-upload" className="flex flex-col items-center justify-center text-gray-600 dark:text-gray-500 cursor-pointer w-full h-full">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.158 0h.008v.008h-.008V8.25z" /></svg>
-                    <p className="mb-2 text-sm"><span className="font-semibold">{t('upload.clickToUpload')}</span> {t('upload.orDragAndDrop')}</p>
-                    <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
-                </label>
+                disableUpload ? (
+                  <div className="flex flex-col items-center justify-center text-gray-600 dark:text-gray-500 w-full h-full text-sm">
+                    <span className="material-symbols-outlined mb-2">image</span>
+                    <p>{t('upload.clickToUpload')}</p>
+                  </div>
+                ) : (
+                  <label htmlFor="file-upload" className="flex flex-col items-center justify-center text-gray-600 dark:text-gray-500 cursor-pointer w-full h-full">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.158 0h.008v.008h-.008V8.25z" /></svg>
+                      <p className="mb-2 text-sm"><span className="font-semibold">{t('upload.clickToUpload')}</span> {t('upload.orDragAndDrop')}</p>
+                      <input id="file-upload" type="file" className="hidden" onChange={handleFileChange} accept="image/*" />
+                  </label>
+                )
             ) : (
                 <>
-                    <button onClick={onClearImage} className="absolute top-2 right-2 z-30 p-1 bg-black/30 dark:bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600 transition-colors" aria-label={t('upload.removeImage')}><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>
+                    <button onClick={onClearImage} className="absolute z-30 p-1 bg-black/30 dark:bg-black/50 backdrop-blur-sm rounded-full text-white hover:bg-red-600 transition-colors" aria-label={t('upload.removeImage')} style={{
+                      top: displayRect ? displayRect.y + 8 : 8,
+                      left: displayRect ? displayRect.x + displayRect.width - 28 : undefined,
+                      right: displayRect ? undefined : 8
+                    }}>
+                      <span className="material-symbols-outlined text-base">delete</span>
+                    </button>
                     <canvas ref={imageCanvasRef} className="absolute top-0 left-0" style={{ zIndex: 1 }} />
                     <canvas ref={maskCanvasRef} className="absolute top-0 left-0" style={{ zIndex: 3, touchAction: 'none', cursor: isMaskToolActive ? 'crosshair' : 'default' }} 
                         onMouseDown={isMaskToolActive ? startDrawing : undefined} 
