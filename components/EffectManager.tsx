@@ -3,6 +3,7 @@ import { useI18n } from '../i18n';
 import type { TransformationCategory } from '../types';
 import { useUserEffects, UserEffect } from '../services/effectStore';
 import IconPicker from './IconPicker';
+import { TRANSFORMATION_SOURCES } from '../constants';
 
 const categoryOptions: Array<{ key: TransformationCategory; icon: string }> = [
   { key: 'custom', icon: 'edit' },
@@ -26,11 +27,28 @@ export default function EffectManager() {
   });
   const [editingId, setEditingId] = useState<string | null>(null);
 
+  // 右侧展示：合并“用户效果 + 内置效果”。仅对用户效果提供编辑/删除操作
+  type DisplayItem = (UserEffect & { isUser: true }) | ({ id?: undefined; title: string; prompt: string; icon: string; category: TransformationCategory; isUser: false });
+
+  const builtinItems: DisplayItem[] = useMemo(() =>
+    TRANSFORMATION_SOURCES.map(({ key, prompt, icon, category }) => ({
+      title: t(`transformations.${key}`),
+      prompt,
+      icon,
+      category,
+      isUser: false as const,
+    })),
+  [t]);
+
+  const userItems: DisplayItem[] = useMemo(() => effects.map(e => ({ ...e, isUser: true as const })), [effects]);
+
+  const allItems: DisplayItem[] = useMemo(() => [...userItems, ...builtinItems], [userItems, builtinItems]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return effects;
-    return effects.filter(e => (e.title + ' ' + e.prompt).toLowerCase().includes(q));
-  }, [effects, search]);
+    if (!q) return allItems;
+    return allItems.filter(e => (e.title + ' ' + e.prompt).toLowerCase().includes(q));
+  }, [allItems, search]);
 
   const currentCategory = useMemo(() => categoryOptions.find(c => c.key === form.category), [form.category]);
 
@@ -133,14 +151,16 @@ export default function EffectManager() {
             <div className="text-center text-gray-500 dark:text-gray-400 py-12">{t('common.unknown')}</div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filtered.map((item) => (
-                <div key={item.id} className="group flex flex-col items-center justify-center text-center p-4 aspect-square bg-white dark:bg-gray-950 rounded-xl border border-black/10 dark:border-white/10">
+              {filtered.map((item, idx) => (
+                <div key={item.isUser ? item.id : `${item.category}-${item.icon}-${idx}`} className="group flex flex-col items-center justify-center text-center p-4 aspect-square bg-white dark:bg-gray-950 rounded-xl border border-black/10 dark:border-white/10">
                   <span className="text-4xl mb-2 material-symbols-outlined">{item.icon}</span>
                   <span className="font-semibold text-sm text-gray-900 dark:text-gray-200 line-clamp-2">{item.title}</span>
-                  <div className="mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => startEdit(item)} className="px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700">{t('effects.edit')}</button>
-                    <button onClick={() => remove(item.id)} className="px-2 py-1 text-xs rounded bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/40 dark:hover:bg-red-900/60">{t('effects.delete')}</button>
-                  </div>
+                  {item.isUser && (
+                    <div className="mt-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => startEdit(item)} className="px-2 py-1 text-xs rounded bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700">{t('effects.edit')}</button>
+                      <button onClick={() => remove(item.id)} className="px-2 py-1 text-xs rounded bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/40 dark:hover:bg-red-900/60">{t('effects.delete')}</button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
