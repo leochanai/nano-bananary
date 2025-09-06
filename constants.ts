@@ -11,6 +11,6 @@ export function useTransformations(): Transformation[] {
     title: item.title,
     prompt: item.prompt,
     icon: item.icon || (item.key === 'custom_prompt' ? 'edit' : 'auto_awesome'),
-    category: item.key === 'custom_prompt' ? 'custom' : undefined,
+    category: item.type || (item.key === 'custom_prompt' ? 'custom' : undefined),
   }));
 }

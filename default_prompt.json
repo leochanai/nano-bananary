@@ -4,195 +4,223 @@
     "zh_name": "自定义提示词",
     "en_prompt": "Input the custom prompt",
     "zh_prompt": "输入自定义提示词",
-    "icon": "edit"
+    "icon": "edit",
+    "type": "custom"
   },
   "3d_figurine": {
     "en_name": "3D Figurine",
     "zh_name": "3D 手办",
     "en_prompt": "turn this photo into a character figure. Behind it, place a box with the character’s image printed on it, and a computer showing the Blender modeling process on its screen. In front of the box, add a round plastic base with the character figure standing on it. set the scene indoors if possible",
     "zh_prompt": "将这张照片转换成一个角色手办。在手办后面放置一个印有角色图像的盒子，旁边是一台显示 Blender 建模过程的电脑屏幕。在盒子前面，添加一个带有角色手办的圆形塑料底座。如果可能，将场景设置在室内",
-    "icon": "view_in_ar"
+    "icon": "view_in_ar",
+    "type": "elements"
   },
   "funko_pop_figure": {
     "en_name": "Funko Pop Figure",
     "zh_name": "Funko Pop 玩偶",
     "en_prompt": "Transform the person into a Funko Pop figure, shown inside and next to its packaging.",
     "zh_prompt": "将人物转换成 Funko Pop 玩偶，展示在包装盒内和旁边。",
-    "icon": "smart_toy"
+    "icon": "smart_toy",
+    "type": "style"
   },
   "lego_minifigure": {
     "en_name": "LEGO Minifigure",
     "zh_name": "乐高小人仔",
     "en_prompt": "Transform the person into a LEGO minifigure, inside its packaging box.",
     "zh_prompt": "将人物转换成乐高小人仔，放置在包装盒内。",
-    "icon": "extension"
+    "icon": "extension",
+    "type": "elements"
   },
   "crochet_doll": {
     "en_name": "Crochet Doll",
     "zh_name": "钩织玩偶",
     "en_prompt": "Transform the subject into a handmade crocheted yarn doll with a cute, chibi-style appearance.",
     "zh_prompt": "将主体转换成一个可爱的Q版手工钩织毛线玩偶。",
-    "icon": "child_friendly"
+    "icon": "child_friendly",
+    "type": "style"
   },
   "anime_to_cosplay": {
     "en_name": "Anime to Cosplay",
     "zh_name": "动漫转 Cosplay",
     "en_prompt": "Generate a highly detailed, realistic photo of a person cosplaying the character in this illustration. Replicate the pose, expression, and framing.",
     "zh_prompt": "根据此插画中的角色，生成一张高度详细、逼真的真人 Cosplay 照片。还原角色的姿势、表情和构图。",
-    "icon": "theaters"
+    "icon": "theaters",
+    "type": "style"
   },
   "cute_plushie": {
     "en_name": "Cute Plushie",
     "zh_name": "可爱毛绒玩具",
     "en_prompt": "Turn the person in this photo into a cute, soft plushie doll.",
     "zh_prompt": "将照片中的人物变成可爱的毛绒玩具。",
-    "icon": "emoji_emotions"
+    "icon": "emoji_emotions",
+    "type": "style"
   },
   "acrylic_keychain": {
     "en_name": "Acrylic Keychain",
     "zh_name": "亚克力钥匙扣",
     "en_prompt": "Turn the subject into a cute acrylic keychain, shown attached to a bag.",
     "zh_prompt": "将主体变成可爱的亚克力钥匙扣，展示在包包上。",
-    "icon": "key"
+    "icon": "key",
+    "type": "elements"
   },
   "hd_enhance": {
     "en_name": "HD Enhance",
     "zh_name": "高清增强",
     "en_prompt": "Enhance this image to high resolution, improving sharpness and clarity.",
     "zh_prompt": "将图像增强到高分辨率，提高清晰度和锐度。",
-    "icon": "high_quality"
+    "icon": "high_quality",
+    "type": "special"
   },
   "pose_reference": {
     "en_name": "Pose Reference",
     "zh_name": "姿势参考",
     "en_prompt": "Apply the pose from the second image to the character in the first image. Render as a professional studio photograph.",
     "zh_prompt": "将第二张图片中的姿势应用到第一张图片中的角色上。渲染为专业的影棚照片。",
-    "icon": "accessibility_new"
+    "icon": "accessibility_new",
+    "type": "scene"
   },
   "to_photorealistic": {
     "en_name": "To Photorealistic",
     "zh_name": "转为写实",
     "en_prompt": "Turn this illustration into a photorealistic version.",
     "zh_prompt": "将此插画转换为逼真的照片版本。",
-    "icon": "photo_camera"
+    "icon": "photo_camera",
+    "type": "style"
   },
   "fashion_magazine": {
     "en_name": "Fashion Magazine",
     "zh_name": "时尚杂志风",
     "en_prompt": "Transform the photo into a stylized, ultra-realistic fashion magazine portrait with cinematic lighting.",
     "zh_prompt": "将照片转换成风格化、超现实的时尚杂志肖像，并运用电影级的灯光。",
-    "icon": "style"
+    "icon": "style",
+    "type": "style"
   },
   "hyper-realistic": {
     "en_name": "Hyper-realistic",
     "zh_name": "超写实",
     "en_prompt": "Generate a hyper-realistic, fashion-style photo with strong, direct flash lighting, grainy texture, and a cool, confident pose.",
     "zh_prompt": "生成一张超现实的时尚风格照片，具有强烈、直射的闪光灯照明、颗粒感纹理和酷炫自信的姿势。",
-    "icon": "bolt"
+    "icon": "bolt",
+    "type": "lighting"
   },
   "architecture_model": {
     "en_name": "Architecture Model",
     "zh_name": "建筑模型",
     "en_prompt": "Convert this photo of a building into a miniature architecture model, placed on a cardstock in an indoor setting. Show a computer with modeling software in the background.",
     "zh_prompt": "将这张建筑照片转换成微缩建筑模型，放置在室内的卡纸上。背景显示一台运行建模软件的电脑。",
-    "icon": "architecture"
+    "icon": "architecture",
+    "type": "scene"
   },
   "product_render": {
     "en_name": "Product Render",
     "zh_name": "产品渲染",
     "en_prompt": "Turn this product sketch into a photorealistic 3D render with studio lighting.",
     "zh_prompt": "将产品草图转换成具有影棚灯光效果的逼真 3D 渲染图。",
-    "icon": "inventory_2"
+    "icon": "inventory_2",
+    "type": "style"
   },
   "soda_can_design": {
     "en_name": "Soda Can Design",
     "zh_name": "汽水罐设计",
     "en_prompt": "Design a soda can using this image as the main graphic, and show it in a professional product shot.",
     "zh_prompt": "以这张图片作为主要图形设计一个汽水罐，并展示其专业的商品照片。",
-    "icon": "sports_bar"
+    "icon": "sports_bar",
+    "type": "elements"
   },
   "industrial_design_render": {
     "en_name": "Industrial Design Render",
     "zh_name": "工业设计渲染",
     "en_prompt": "Turn this industrial design sketch into a realistic product photo, rendered with light brown leather and displayed in a minimalist museum setting.",
     "zh_prompt": "将工业设计草图转换成逼真的产品照片，渲染出浅棕色皮革质感，并展示在极简主义的博物馆环境中。",
-    "icon": "precision_manufacturing"
+    "icon": "precision_manufacturing",
+    "type": "style"
   },
   "color_palette_swap": {
     "en_name": "Color Palette Swap",
     "zh_name": "色彩调和",
     "en_prompt": "Turn this image into a clean, hand-drawn line art sketch.",
     "zh_prompt": "将此图像转换成干净的手绘线稿素描。",
-    "icon": "palette"
+    "icon": "palette",
+    "type": "style"
   },
   "line_art_drawing": {
     "en_name": "Line Art Drawing",
     "zh_name": "线稿图",
     "en_prompt": "Turn the image into a clean, hand-drawn line art sketch.",
     "zh_prompt": "将图像转换成干净的手绘线稿素描。",
-    "icon": "draw"
+    "icon": "draw",
+    "type": "style"
   },
   "painting_process": {
     "en_name": "Painting Process",
     "zh_name": "绘画过程",
     "en_prompt": "Generate a 4-panel grid showing the artistic process of creating this image, from sketch to final render.",
     "zh_prompt": "生成一个四格画，展示创建此图像的艺术过程，从草图到最终渲染。",
-    "icon": "grid_on"
+    "icon": "grid_on",
+    "type": "special"
   },
   "marker_sketch": {
     "en_name": "Marker Sketch",
     "zh_name": "马克笔速写",
     "en_prompt": "Redraw the image in the style of a Copic marker sketch, often used in design.",
     "zh_prompt": "以 Copic 马克笔素描风格重新绘制图像，这种风格常用于设计领域。",
-    "icon": "brush"
+    "icon": "brush",
+    "type": "style"
   },
   "add_illustration": {
     "en_name": "Add Illustration",
     "zh_name": "添加插画",
     "en_prompt": "Add a cute, cartoon-style illustrated couple into the real-world scene, sitting and talking.",
     "zh_prompt": "在真实场景中添加一对可爱的卡通风格插画情侣，坐着聊天。",
-    "icon": "auto_fix_high"
+    "icon": "auto_fix_high",
+    "type": "elements"
   },
   "cyberpunk": {
     "en_name": "Cyberpunk",
     "zh_name": "赛博朋克",
     "en_prompt": "Transform the scene into a futuristic cyberpunk city.",
     "zh_prompt": "将场景转换成未来赛博朋克城市。",
-    "icon": "robot_2"
+    "icon": "robot_2",
+    "type": "style"
   },
   "van_gogh_style": {
     "en_name": "Van Gogh Style",
     "zh_name": "梵高风格",
     "en_prompt": "Reimagine the photo in the style of Van Gogh's 'Starry Night'.",
     "zh_prompt": "以梵高《星月夜》的风格重新构思照片。",
-    "icon": "nights_stay"
+    "icon": "nights_stay",
+    "type": "style"
   },
   "isolate_&_enhance": {
     "en_name": "Isolate & Enhance",
     "zh_name": "隔离并增强",
     "en_prompt": "Isolate the person in the masked area and generate a high-definition photo of them against a neutral background.",
     "zh_prompt": "隔离蒙版区域的人物，并在中性背景下生成他们的高清照片。",
-    "icon": "center_focus_strong"
+    "icon": "center_focus_strong",
+    "type": "special"
   },
   "3d_screen_effect": {
     "en_name": "3D Screen Effect",
     "zh_name": "3D 屏幕效果",
     "en_prompt": "For an image with a screen, add content that appears to be glasses-free 3D, popping out of the screen.",
     "zh_prompt": "对于带有屏幕的图像，添加看起来像是裸眼 3D 的内容，从屏幕中弹出。",
-    "icon": "tv"
+    "icon": "tv",
+    "type": "special"
   },
   "makeup_analysis": {
     "en_name": "Makeup Analysis",
     "zh_name": "妆容分析",
     "en_prompt": "Analyze the makeup in this photo and suggest improvements by drawing with a red pen.",
     "zh_prompt": "分析照片中的妆容，并用红笔绘制建议改进的地方。",
-    "icon": "face_retouching_natural"
+    "icon": "face_retouching_natural",
+    "type": "special"
   },
   "change_background": {
     "en_name": "Change Background",
     "zh_name": "更换背景",
     "en_prompt": "Change the background to a Y2K aesthetic style.",
     "zh_prompt": "将背景更改为 Y2K 美学风格。",
-    "icon": "wallpaper"
+    "icon": "wallpaper",
+    "type": "scene"
   }
 }

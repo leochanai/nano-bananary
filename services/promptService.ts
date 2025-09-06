@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { SupportedLanguage } from '../i18n';
+import type { TransformationCategory } from '../types';
 
 export interface PromptEntry {
   key: string;
@@ -8,6 +9,7 @@ export interface PromptEntry {
   en_prompt: string;
   zh_prompt: string;
   icon?: string;
+  type?: TransformationCategory;
 }
 
 type PromptMap = Record<string, Omit<PromptEntry, 'key'>>;
@@ -70,6 +72,7 @@ export interface MergedPromptItem {
   title: string;
   prompt: string;
   icon?: string;
+  type?: TransformationCategory;
   isBuiltin: boolean;
   isOverridden: boolean;
 }
@@ -87,7 +90,7 @@ export function mergePromptMaps(defaultMap: PromptMap, customMap: PromptMap, lan
     if (key === 'custom_prompt') {
       prompt = 'CUSTOM';
     }
-    items.push({ key, title, prompt, icon: (c?.icon || d?.icon), isBuiltin: !!d, isOverridden: !!(d && c) });
+    items.push({ key, title, prompt, icon: (c?.icon || d?.icon), type: (c?.type || d?.type), isBuiltin: !!d, isOverridden: !!(d && c) });
   }
   // 稳定排序：先 custom_prompt，再内置（字母序），最后纯自定义（字母序）
   items.sort((a, b) => {
