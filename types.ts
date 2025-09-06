@@ -2,7 +2,7 @@
 export interface Transformation {
   title: string;
   prompt: string;
-  emoji: string;
+  icon: string; // Material Symbols icon name
 }
 
 export interface GeneratedContent {

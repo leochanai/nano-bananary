@@ -163,8 +163,9 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-300 font-sans">
       <header className="bg-white/70 dark:bg-black/60 backdrop-blur-lg sticky top-0 z-20 p-4 border-b border-black/10 dark:border-white/10">
         <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400 cursor-pointer" onClick={handleResetApp}>
-            🍌 Creative Banana
+          <h1 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400 cursor-pointer flex items-center gap-2" onClick={handleResetApp}>
+            <span className="material-symbols-outlined text-3xl">hub</span>
+            <span>Creative Banana</span>
           </h1>
           <div className="flex items-center gap-2">
             <button
@@ -173,7 +174,7 @@ const App: React.FC = () => {
               title={isDark ? '切换到浅色' : '切换到深色'}
               className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
             >
-              {isDark ? '☀️' : '🌙'}
+              <span className="material-symbols-outlined align-middle">{isDark ? 'light_mode' : 'dark_mode'}</span>
             </button>
             <button onClick={() => setLang('zh')} className={`px-2 py-1 text-sm rounded ${lang === 'zh' ? 'bg-orange-500 text-black' : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-300'}`}>中文</button>
             <button onClick={() => setLang('en')} className={`px-2 py-1 text-sm rounded ${lang === 'en' ? 'bg-orange-500 text-black' : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-300'}`}>EN</button>
@@ -208,7 +209,7 @@ const App: React.FC = () => {
                 <div>
                   <div className="mb-4">
                     <h2 className="text-xl font-semibold mb-1 text-orange-500 flex items-center gap-3">
-                      <span className="text-3xl">{selectedTransformation.emoji}</span>
+                      <span className="text-3xl material-symbols-outlined">{selectedTransformation.icon}</span>
                       {selectedTransformation.title}
                     </h2>
                     {selectedTransformation.prompt === 'CUSTOM' ? (
