@@ -15,6 +15,15 @@ const RESOURCES: Resources = {
       close: '关闭',
       unknown: '未知',
     },
+    categories: {
+      all: '全部',
+      custom: '自定义',
+      style: '风格转换',
+      elements: '元素增删',
+      scene: '场景变换',
+      lighting: '光影与色调',
+      special: '特效/合成',
+    },
     transformations: {
       customPrompt: '自定义提示',
       cinematicLight: '电影光效',
@@ -82,6 +91,9 @@ const RESOURCES: Resources = {
       hasPrevious: '已加载上次的结果。请选择新的效果进行应用。',
       initial: '在下方选择一个创意效果。下一步会提示你上传图片。',
     },
+    search: {
+      placeholder: '搜索效果名称或描述…',
+    },
     placeholder: {
       customPrompt: "例如：'让天空变为绚丽的日落' 或 '在水面上添加一艘小红船'",
     },
@@ -132,6 +144,15 @@ const RESOURCES: Resources = {
       generated: 'Generated',
       close: 'Close',
       unknown: 'Unknown',
+    },
+    categories: {
+      all: 'All',
+      custom: 'Custom',
+      style: 'Style',
+      elements: 'Elements',
+      scene: 'Scene',
+      lighting: 'Lighting',
+      special: 'Special',
     },
     transformations: {
       customPrompt: 'Custom Prompt',
@@ -199,6 +220,9 @@ const RESOURCES: Resources = {
       chooseEffect: 'Choose an Effect',
       hasPrevious: 'Your previous result is loaded. Select a new transformation to apply.',
       initial: "Select a creative transformation below. You'll be asked to upload your image on the next step.",
+    },
+    search: {
+      placeholder: 'Search effect name or description…',
     },
     placeholder: {
       customPrompt: "e.g., 'make the sky a vibrant sunset' or 'add a small red boat on the water'",
