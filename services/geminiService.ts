@@ -83,3 +83,53 @@ export async function editImage(
     throw new Error("An unknown error occurred while communicating with the API.");
   }
 }
+
+export async function editImages(
+  images: { base64: string; mimeType: string }[],
+  prompt: string
+): Promise<GeneratedContent> {
+  try {
+    const parts: any[] = [];
+    for (const img of images) {
+      parts.push({
+        inlineData: {
+          data: img.base64,
+          mimeType: img.mimeType,
+        },
+      });
+    }
+    parts.push({ text: prompt });
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image-preview',
+      contents: { parts },
+      config: {
+        responseModalities: [Modality.IMAGE, Modality.TEXT],
+      },
+    });
+
+    const result: GeneratedContent = { imageUrl: null, text: null };
+    const responseParts = response.candidates?.[0]?.content?.parts;
+    if (responseParts) {
+      for (const part of responseParts) {
+        if (part.text) {
+          result.text = (result.text ? result.text + "\n" : "") + part.text;
+        } else if (part.inlineData) {
+          const base64ImageBytes: string = part.inlineData.data;
+          result.imageUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+        }
+      }
+    }
+
+    if (!result.imageUrl) {
+      throw new Error('The model did not return an image.');
+    }
+    return result;
+  } catch (error) {
+    console.error('Error calling Gemini API (multi):', error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to generate image: ${error.message}`);
+    }
+    throw new Error('An unknown error occurred while communicating with the API.');
+  }
+}

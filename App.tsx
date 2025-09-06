@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { useI18n } from './i18n';
 import { useTransformations } from './constants';
-import { editImage } from './services/geminiService';
+import { editImage, editImages } from './services/geminiService';
 import type { GeneratedContent, Transformation, UploadedImage } from './types';
 import TransformationSelector from './components/TransformationSelector';
 import ResultDisplay from './components/ResultDisplay';
@@ -66,12 +66,8 @@ const App: React.FC = () => {
     // Auto-activate first slot so user can generate immediately
     if (nextImages.length > 0) {
       setActiveIndex(0);
-      setSelectedFile(nextImages[0].file);
-      setImagePreviewUrl(nextImages[0].dataUrl);
     } else {
       setActiveIndex(null);
-      setSelectedFile(null);
-      setImagePreviewUrl(null);
     }
     setMaskDataUrl(null);
     setActiveTool('none');
@@ -182,18 +178,7 @@ const App: React.FC = () => {
     });
   }, [activeIndex]);
 
-  const activateImage = useCallback((index: number) => {
-    setActiveIndex(index);
-    const img = images[index];
-    if (img) {
-      setSelectedFile(img.file);
-      setImagePreviewUrl(img.dataUrl);
-      setGeneratedContent(null);
-      setError(null);
-      setMaskDataUrl(null);
-      setActiveTool('none');
-    }
-  }, [images]);
+  // No need to activate images in multi mode anymore
   
   const handleClearImage = () => {
     setImagePreviewUrl(null);
@@ -205,15 +190,15 @@ const App: React.FC = () => {
   };
 
   const handleGenerate = useCallback(async () => {
-    if (!imagePreviewUrl || !selectedTransformation) {
-        setError(t('errors.uploadAndSelect'));
-        return;
+    if (!selectedTransformation) {
+      setError(t('errors.uploadAndSelect'));
+      return;
     }
-    
+
     const promptToUse = selectedTransformation.prompt === 'CUSTOM' ? customPrompt : selectedTransformation.prompt;
     if (!promptToUse.trim()) {
-        setError(t('errors.enterPrompt'));
-        return;
+      setError(t('errors.enterPrompt'));
+      return;
     }
 
     setIsLoading(true);
@@ -221,22 +206,28 @@ const App: React.FC = () => {
     setGeneratedContent(null);
 
     try {
-      const mimeType = imagePreviewUrl.split(';')[0].split(':')[1] ?? 'image/png';
-      const base64 = imagePreviewUrl.split(',')[1];
-      const maskBase64 = maskDataUrl ? maskDataUrl.split(',')[1] : null;
-
-      const result = await editImage(
-        base64, 
-        mimeType, 
-        promptToUse,
-        maskBase64
-      );
-
-      if (result.imageUrl) {
-        // Embed invisible watermark
-        result.imageUrl = await embedWatermark(result.imageUrl, "Creative Banana");
+      let result: GeneratedContent;
+      if (isMultiMode) {
+        const prepared = images.map(img => {
+          const mimeType = img.dataUrl.split(';')[0].split(':')[1] ?? 'image/png';
+          const base64 = img.dataUrl.split(',')[1];
+          return { base64, mimeType };
+        });
+        if (prepared.length === 0) {
+          throw new Error(t('errors.uploadAndSelect'));
+        }
+        result = await editImages(prepared, promptToUse);
+      } else {
+        if (!imagePreviewUrl) throw new Error(t('errors.uploadAndSelect'));
+        const mimeType = imagePreviewUrl.split(';')[0].split(':')[1] ?? 'image/png';
+        const base64 = imagePreviewUrl.split(',')[1];
+        const maskBase64 = maskDataUrl ? maskDataUrl.split(',')[1] : null;
+        result = await editImage(base64, mimeType, promptToUse, maskBase64);
       }
 
+      if (result.imageUrl) {
+        result.imageUrl = await embedWatermark(result.imageUrl, "Creative Banana");
+      }
       setGeneratedContent(result);
     } catch (err) {
       console.error(err);
@@ -244,7 +235,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [imagePreviewUrl, selectedTransformation, maskDataUrl, customPrompt]);
+  }, [selectedTransformation, customPrompt, isMultiMode, images, imagePreviewUrl, maskDataUrl]);
 
   const handleUseResultAsInput = useCallback(async () => {
     if (!generatedContent?.imageUrl) return;
@@ -290,7 +281,8 @@ const App: React.FC = () => {
     setActiveTool(current => (current === 'mask' ? 'none' : 'mask'));
   };
 
-  const isGenerateDisabled = !imagePreviewUrl || isLoading || (selectedTransformation?.prompt === 'CUSTOM' && !customPrompt.trim());
+  const hasAnyInput = isMultiMode ? images.length > 0 : !!imagePreviewUrl;
+  const isGenerateDisabled = !hasAnyInput || isLoading || (selectedTransformation?.prompt === 'CUSTOM' && !customPrompt.trim());
 
   return (
     <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-300 font-sans">
@@ -396,16 +388,14 @@ const App: React.FC = () => {
                   {isMultiMode && (
                     <ImageUploader
                       images={images}
-                      activeIndex={activeIndex}
                       onAdd={addImages}
                       onRemove={removeImageAt}
-                      onActivate={activateImage}
                       max={3}
                       showSlots
                     />
                   )}
 
-                  {(!isMultiMode || imagePreviewUrl) && (
+                  {!isMultiMode && (
                     <>
                       <div className="mt-4" />
                       <ImageEditorCanvas
@@ -414,13 +404,13 @@ const App: React.FC = () => {
                         onMaskChange={setMaskDataUrl}
                         onClearImage={handleClearImage}
                         isMaskToolActive={activeTool === 'mask'}
-                        disableUpload={isMultiMode}
+                        disableUpload={false}
                         initialMaskUrl={maskDataUrl}
                       />
                     </>
                   )}
 
-                  {imagePreviewUrl && (
+                  {!isMultiMode && imagePreviewUrl && (
                     <div className="mt-4">
                         <button
                             onClick={toggleMaskTool}

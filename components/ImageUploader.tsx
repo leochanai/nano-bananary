@@ -4,15 +4,13 @@ import type { UploadedImage } from '../types';
 
 interface ImageUploaderProps {
   images: UploadedImage[];
-  activeIndex: number | null;
   onAdd: (files: File[]) => void;
   onRemove: (index: number) => void;
-  onActivate: (index: number) => void;
   max?: number; // default 3
   showSlots?: boolean; // show 3 labeled slots UI
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({ images, activeIndex, onAdd, onRemove, onActivate, max = 3, showSlots = false }) => {
+const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onAdd, onRemove, max = 3, showSlots = false }) => {
   const { t } = useI18n();
 
   const remaining = Math.max(0, max - images.length);
@@ -51,7 +49,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ images, activeIndex, onAd
             const img = images[idx];
             const has = Boolean(img);
             return (
-              <div key={has ? img!.id : `slot-${idx}`} className={`relative group aspect-square rounded-lg overflow-hidden border ${activeIndex === idx ? 'border-orange-400' : 'border-black/10 dark:border-white/10'} ${!has ? 'bg-gray-50 dark:bg-gray-900/50' : ''}`}>
+              <div key={has ? img!.id : `slot-${idx}`} className={`relative group aspect-square rounded-lg overflow-hidden border border-black/10 dark:border-white/10 ${!has ? 'bg-gray-50 dark:bg-gray-900/50' : ''}`}>
                 {has ? (
                   <img src={img!.dataUrl} alt={`uploaded-${idx}`} className="w-full h-full object-cover" />
                 ) : (
@@ -78,18 +76,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ images, activeIndex, onAd
                   </button>
                 </div>
               )}
-              <div className="absolute bottom-1 left-1 flex gap-1">
-                {has && activeIndex === idx ? (
-                  <span className="px-2 py-0.5 text-xs rounded bg-orange-500 text-black font-semibold">{t('upload.active')}</span>
-                ) : has ? (
-                  <button
-                    onClick={() => onActivate(idx)}
-                    className="px-2 py-0.5 text-xs rounded bg-black/50 text-white hover:bg-black/70"
-                  >
-                    {t('upload.setActive')}
-                  </button>
-                ) : null}
-              </div>
+              {/* No active/select controls in multi-image mode */}
               </div>
             );
           })}
