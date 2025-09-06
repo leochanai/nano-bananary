@@ -136,6 +136,21 @@ const RESOURCES: Resources = {
     modal: {
       downloadImage: '下载图片',
     },
+    effects: {
+      manage: '效果管理',
+      add: '新增效果',
+      edit: '编辑效果',
+      save: '保存',
+      delete: '删除',
+      cancel: '取消',
+      clearAll: '清空全部',
+      addAction: '添加',
+      titlePlaceholder: '效果名称（用于展示）',
+      promptPlaceholder: '提示词（将发送给模型）',
+      chooseIcon: '选择图标',
+      searchIcons: '搜索图标名称…',
+      chooseStyle: '选择风格',
+    },
   },
   en: {
     common: {
@@ -265,6 +280,21 @@ const RESOURCES: Resources = {
     },
     modal: {
       downloadImage: 'Download Image',
+    },
+    effects: {
+      manage: 'Effect Manager',
+      add: 'Add Effect',
+      edit: 'Edit Effect',
+      save: 'Save',
+      delete: 'Delete',
+      cancel: 'Cancel',
+      clearAll: 'Clear All',
+      addAction: 'Add',
+      titlePlaceholder: 'Effect title (for display)',
+      promptPlaceholder: 'Prompt (sent to the model)',
+      chooseIcon: 'Choose Icon',
+      searchIcons: 'Search icon name…',
+      chooseStyle: 'Choose Style',
     },
   },
 };

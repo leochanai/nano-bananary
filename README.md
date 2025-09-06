@@ -54,6 +54,13 @@ Use in AI Studio: https://ai.studio/apps/drive/1JknFrFFdiOm7FIA8MLOJa_vtJN2g24c1
 
 
 
+## Effect Manager 使用说明
+
+- 顶部导航点击“调参”图标进入“效果管理”。
+- 在左侧表单填写：名称、提示词（会发送给模型）、图标（Material Symbols 名称）、分类。
+- 点击“添加”保存；支持编辑、删除，以及“一键清空”。
+- 自定义效果保存在浏览器 localStorage，并在首页与内置效果一起显示、可搜索。
+
 
 ## 更新日志
 

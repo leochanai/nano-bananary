@@ -11,11 +11,14 @@ import ErrorMessage from './components/ErrorMessage';
 import ImageEditorCanvas from './components/ImageEditorCanvas';
 import { dataUrlToFile, embedWatermark } from './utils/fileUtils';
 import ImagePreviewModal from './components/ImagePreviewModal';
+import EffectManager from './components/EffectManager';
 
 type ActiveTool = 'mask' | 'none';
 
 const App: React.FC = () => {
   const { t, lang, setLang } = useI18n();
+  const [isManagingEffects, setIsManagingEffects] = useState<boolean>(false);
+  const transformations = useTransformations();
   const [selectedTransformation, setSelectedTransformation] = useState<Transformation | null>(null);
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -50,6 +53,10 @@ const App: React.FC = () => {
   const toggleLanguage = useCallback(() => {
     setLang(lang === 'zh' ? 'en' : 'zh');
   }, [lang, setLang]);
+
+  const toggleEffectManager = useCallback(() => {
+    setIsManagingEffects((v) => !v);
+  }, []);
 
   const handleSelectTransformation = (transformation: Transformation) => {
     setSelectedTransformation(transformation);
@@ -152,6 +159,7 @@ const App: React.FC = () => {
     setMaskDataUrl(null);
     setCustomPrompt('');
     setActiveTool('none');
+    setIsManagingEffects(false);
   };
 
   const handleOpenPreview = (url: string) => setPreviewImageUrl(url);
@@ -188,14 +196,24 @@ const App: React.FC = () => {
             >
               <span className="material-symbols-outlined align-middle">translate</span>
             </button>
+            <button
+              onClick={toggleEffectManager}
+              aria-label={t('effects.manage')}
+              title={t('effects.manage')}
+              className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            >
+              <span className="material-symbols-outlined align-middle">{isManagingEffects ? 'close' : 'tune'}</span>
+            </button>
           </div>
         </div>
       </header>
 
       <main>
-        {!selectedTransformation ? (
+        {isManagingEffects ? (
+          <EffectManager />
+        ) : !selectedTransformation ? (
           <TransformationSelector 
-            transformations={useTransformations()} 
+            transformations={transformations} 
             onSelect={handleSelectTransformation} 
             hasPreviousResult={!!imagePreviewUrl}
           />
