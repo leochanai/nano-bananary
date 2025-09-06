@@ -1,3 +1,10 @@
 {
-  
+  "custom_1757171755427": {
+    "en_name": "测试",
+    "zh_name": "测试",
+    "en_prompt": "CDs",
+    "zh_prompt": "CDs",
+    "icon": "movie",
+    "type": "style"
+  }
 }

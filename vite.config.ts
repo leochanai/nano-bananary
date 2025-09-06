@@ -47,24 +47,42 @@ export default defineConfig(({ mode }) => {
               });
             }
 
-            server.middlewares.use(async (req, res, next) => {
-              const url = req.url || '';
+            // 监听文件变更并通知客户端（HMR 自定义事件）
+            try {
+              server.watcher.add([defaultPath, customPath]);
+              const notify = () => server.ws.send({ type: 'custom', event: 'prompts-changed' });
+              server.watcher.on('change', (changedPath) => {
+                if (changedPath === defaultPath || changedPath === customPath) {
+                  notify();
+                }
+              });
+            } catch {}
 
-              if (url === '/api/prompts/default' && req.method === 'GET') {
+            server.middlewares.use(async (req, res, next) => {
+              const rawUrl = req.url || '';
+              let pathname = rawUrl;
+              try {
+                const u = new URL(rawUrl, 'http://localhost');
+                pathname = u.pathname;
+              } catch {}
+
+              if (pathname === '/api/prompts/default' && req.method === 'GET') {
                 const data = readJsonSafe(defaultPath);
                 res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Cache-Control', 'no-store');
                 res.end(JSON.stringify(data));
                 return;
               }
 
-              if (url === '/api/prompts/custom' && req.method === 'GET') {
+              if (pathname === '/api/prompts/custom' && req.method === 'GET') {
                 const data = readJsonSafe(customPath);
                 res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Cache-Control', 'no-store');
                 res.end(JSON.stringify(data));
                 return;
               }
 
-              if (url === '/api/prompts/custom' && req.method === 'POST') {
+              if (pathname === '/api/prompts/custom' && req.method === 'POST') {
                 const body = await readBody(req);
                 const { key, en_name, zh_name, en_prompt, zh_prompt, icon, type } = body || {};
                 const data = readJsonSafe(customPath);
@@ -84,11 +102,12 @@ export default defineConfig(({ mode }) => {
                 res.setHeader('Content-Type', 'application/json');
                 res.statusCode = ok ? 200 : 500;
                 res.end(JSON.stringify({ ok, key: k }));
+                try { server.ws.send({ type: 'custom', event: 'prompts-changed' }); } catch {}
                 return;
               }
 
-              if (url?.startsWith('/api/prompts/custom/') && req.method === 'DELETE') {
-                const parts = url.split('/');
+              if (pathname?.startsWith('/api/prompts/custom/') && req.method === 'DELETE') {
+                const parts = pathname.split('/');
                 const k = decodeURIComponent(parts[parts.length - 1] || '');
                 const data = readJsonSafe(customPath);
                 if (k && k in data) {
@@ -97,6 +116,7 @@ export default defineConfig(({ mode }) => {
                   res.setHeader('Content-Type', 'application/json');
                   res.statusCode = ok ? 200 : 500;
                   res.end(JSON.stringify({ ok }));
+                  try { server.ws.send({ type: 'custom', event: 'prompts-changed' }); } catch {}
                 } else {
                   res.statusCode = 404;
                   res.end(JSON.stringify({ ok: false, error: 'Not found' }));
@@ -104,17 +124,58 @@ export default defineConfig(({ mode }) => {
                 return;
               }
 
-              if (url === '/api/prompts/custom' && req.method === 'DELETE') {
+              if (pathname === '/api/prompts/custom' && req.method === 'DELETE') {
                 const ok = writeJsonSafe(customPath, {});
                 res.setHeader('Content-Type', 'application/json');
                 res.statusCode = ok ? 200 : 500;
                 res.end(JSON.stringify({ ok }));
+                try { server.ws.send({ type: 'custom', event: 'prompts-changed' }); } catch {}
                 return;
               }
 
               next();
             });
           },
+          // 预览服务器同样提供接口（适用于 vite preview）
+          configurePreviewServer(server) {
+            const root = __dirname;
+            const defaultPath = path.resolve(root, 'default_prompt.json');
+            const customPath = path.resolve(root, 'custom_prompt.json');
+
+            function readJsonSafe(filePath: string) {
+              try {
+                if (!fs.existsSync(filePath)) return {} as any;
+                const raw = fs.readFileSync(filePath, 'utf-8');
+                return raw.trim() ? JSON.parse(raw) : ({} as any);
+              } catch {
+                return {} as any;
+              }
+            }
+
+            server.middlewares.use(async (req: any, res: any, next: any) => {
+              const rawUrl = req.url || '';
+              let pathname = rawUrl;
+              try {
+                const u = new URL(rawUrl, 'http://localhost');
+                pathname = u.pathname;
+              } catch {}
+              if (pathname === '/api/prompts/default' && req.method === 'GET') {
+                const data = readJsonSafe(defaultPath);
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Cache-Control', 'no-store');
+                res.end(JSON.stringify(data));
+                return;
+              }
+              if (pathname === '/api/prompts/custom' && req.method === 'GET') {
+                const data = readJsonSafe(customPath);
+                res.setHeader('Content-Type', 'application/json');
+                res.setHeader('Cache-Control', 'no-store');
+                res.end(JSON.stringify(data));
+                return;
+              }
+              next();
+            });
+          }
         },
       ],
       define: {

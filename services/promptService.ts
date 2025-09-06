@@ -14,8 +14,21 @@ export interface PromptEntry {
 
 type PromptMap = Record<string, Omit<PromptEntry, 'key'>>;
 
+// 全局事件名：用于在不同 hook 实例之间同步 prompts 更改
+const PROMPTS_CHANGED_EVENT = 'promptsChanged';
+
+function dispatchPromptsChanged() {
+  if (typeof window !== 'undefined') {
+    try {
+      window.dispatchEvent(new CustomEvent(PROMPTS_CHANGED_EVENT));
+    } catch {}
+  }
+}
+
 async function getJson<T = any>(url: string): Promise<T> {
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  // 加上时间戳避免缓存，并显式禁用缓存
+  const antiCacheUrl = url + (url.includes('?') ? '&' : '?') + `_t=${Date.now()}`;
+  const res = await fetch(antiCacheUrl, { headers: { 'Accept': 'application/json' }, cache: 'no-store' as RequestCache });
   if (!res.ok) throw new Error(`GET ${url} failed: ${res.status}`);
   return await res.json();
 }
@@ -128,27 +141,57 @@ export function usePromptEffects(lang: SupportedLanguage) {
     reload();
   }, [reload]);
 
+  // 监听来自其他组件/窗口的 prompts 变更事件，以及开发环境的 HMR 自定义事件
+  useEffect(() => {
+    const onChanged = () => { reload(); };
+    if (typeof window !== 'undefined') {
+      window.addEventListener(PROMPTS_CHANGED_EVENT, onChanged as EventListener);
+    }
+    // Vite 开发环境下通过自定义 HMR 事件触发
+    try {
+      const meta: any = (import.meta as any);
+      if (meta && meta.hot && typeof meta.hot.on === 'function') {
+        meta.hot.on('prompts-changed', onChanged);
+      }
+    } catch {}
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener(PROMPTS_CHANGED_EVENT, onChanged as EventListener);
+      }
+      try {
+        const meta: any = (import.meta as any);
+        if (meta && meta.hot && typeof meta.hot.off === 'function') {
+          meta.hot.off('prompts-changed', onChanged);
+        }
+      } catch {}
+    };
+  }, [reload]);
+
   const merged = useMemo(() => mergePromptMaps(defaultMap, customMap, lang), [defaultMap, customMap, lang]);
 
   const create = useCallback(async (name: string, prompt: string, icon?: string, type?: TransformationCategory) => {
     const resp = await upsertCustomPrompt({ name, prompt, icon, type });
     await reload();
+    dispatchPromptsChanged();
     return resp.key;
   }, [reload]);
 
   const update = useCallback(async (key: string, name: string, prompt: string, icon?: string, type?: TransformationCategory) => {
     await upsertCustomPrompt({ key, name, prompt, icon, type });
     await reload();
+    dispatchPromptsChanged();
   }, [reload]);
 
   const remove = useCallback(async (key: string) => {
     await deleteCustomPrompt(key);
     await reload();
+    dispatchPromptsChanged();
   }, [reload]);
 
   const clearAll = useCallback(async () => {
     await clearAllCustomPrompts();
     await reload();
+    dispatchPromptsChanged();
   }, [reload]);
 
   return { loading, error, merged, defaultMap, customMap, reload, create, update, remove, clearAll };
