@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useI18n } from '../i18n';
 import type { TransformationCategory } from '../types';
 import IconPicker from './IconPicker';
@@ -19,17 +19,21 @@ interface EffectEditModalProps {
   onCancel: () => void;
 }
 
-const categoryOptions: Array<{ key: TransformationCategory; icon: string; labelKey: string }> = [
-  { key: 'custom', icon: 'edit', labelKey: 'categories.custom' },
-  { key: 'style', icon: 'palette', labelKey: 'categories.style' },
-  { key: 'elements', icon: 'local_florist', labelKey: 'categories.elements' },
-  { key: 'scene', icon: 'landscape', labelKey: 'categories.scene' },
-  { key: 'lighting', icon: 'wb_sunny', labelKey: 'categories.lighting' },
-  { key: 'special', icon: 'auto_awesome', labelKey: 'categories.special' },
-];
+// 动态构建选项，确保始终包含“自定义”
+function useCategoryOptions() {
+  const options: Array<{ key: TransformationCategory; icon: string; labelKey: string }> = [
+    { key: 'style', icon: 'palette', labelKey: 'categories.style' },
+    { key: 'elements', icon: 'local_florist', labelKey: 'categories.elements' },
+    { key: 'scene', icon: 'landscape', labelKey: 'categories.scene' },
+    { key: 'lighting', icon: 'wb_sunny', labelKey: 'categories.lighting' },
+    { key: 'special', icon: 'auto_awesome', labelKey: 'categories.special' },
+  ];
+  return options;
+}
 
 const EffectEditModal: React.FC<EffectEditModalProps> = ({ open, mode, form, onChange, onSubmit, onCancel }) => {
   const { t } = useI18n();
+  const categoryOptions = useMemo(() => useCategoryOptions(), [t]);
   if (!open) return null;
 
   const isValid = form.title.trim() && form.prompt.trim();

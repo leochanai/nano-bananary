@@ -16,7 +16,7 @@ export default function EffectManager() {
     title: '',
     prompt: '',
     icon: 'auto_awesome',
-    category: 'custom',
+    category: 'style',
   });
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingBuiltin, setEditingBuiltin] = useState<string | null>(null);
@@ -66,7 +66,7 @@ export default function EffectManager() {
     } else {
       create(form);
     }
-    setForm({ title: '', prompt: '', icon: 'auto_awesome', category: 'custom' });
+    setForm({ title: '', prompt: '', icon: 'auto_awesome', category: 'style' });
     setIsModalOpen(false);
   };
 
@@ -87,7 +87,7 @@ export default function EffectManager() {
     setEditingId(null);
     setEditingBuiltin(null);
     setIsModalOpen(false);
-    setForm({ title: '', prompt: '', icon: 'auto_awesome', category: 'custom' });
+    setForm({ title: '', prompt: '', icon: 'auto_awesome', category: 'style' });
   };
 
   const handleClearAll = () => {
@@ -102,7 +102,7 @@ export default function EffectManager() {
           <span className="material-symbols-outlined">tune</span>
           {t('effects.manage')}
         </h2>
-        <button onClick={() => { setEditingId(null); setEditingBuiltin(null); setForm({ title: '', prompt: '', icon: 'auto_awesome', category: 'custom' }); setIsModalOpen(true); }} className="px-3 py-2 text-sm rounded-md bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold">
+        <button onClick={() => { setEditingId(null); setEditingBuiltin(null); setForm({ title: '', prompt: '', icon: 'auto_awesome', category: 'style' }); setIsModalOpen(true); }} className="px-3 py-2 text-sm rounded-md bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold">
           {t('effects.add')}
         </button>
       </div>
@@ -131,53 +131,57 @@ export default function EffectManager() {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filtered.map((item, idx) => (
                 <div key={item.isUser ? item.id : `${item.category}-${item.icon}-${idx}`} className={`group relative flex flex-col items-center justify-center text-center p-4 aspect-square rounded-xl border border-black/10 dark:border-white/10 ${('isUser' in item && !item.isUser && item.isDisabled) ? 'bg-gray-100 dark:bg-gray-900 opacity-60' : 'bg-white dark:bg-gray-950'}`}>
-                  <div className="absolute top-2 right-2 flex gap-1">
-                    {item.isUser ? (
-                      <>
-                        <button
-                          onClick={() => startEdit(item)}
-                          title={t('effects.edit')}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm"
-                        >
-                          <span className="material-symbols-outlined text-base">edit</span>
-                        </button>
-                        <button
-                          onClick={() => remove(item.id)}
-                          title={t('effects.delete')}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 shadow-sm"
-                        >
-                          <span className="material-symbols-outlined text-base">delete</span>
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => startEditBuiltin(item)}
-                          title={t('effects.edit')}
-                          className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm"
-                        >
-                          <span className="material-symbols-outlined text-base">edit</span>
-                        </button>
-                        {item.isDisabled ? (
+                  {(
+                    item.isUser || (!item.isUser && item.key !== 'customPrompt')
+                  ) && (
+                    <div className="absolute top-2 right-2 flex gap-1">
+                      {item.isUser ? (
+                        <>
                           <button
-                            onClick={() => enable(item.key)}
-                            title={t('effects.restore') || '恢复'}
-                            className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 shadow-sm"
+                            onClick={() => startEdit(item)}
+                            title={t('effects.edit')}
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm"
                           >
-                            <span className="material-symbols-outlined text-base">visibility</span>
+                            <span className="material-symbols-outlined text-base">edit</span>
                           </button>
-                        ) : (
                           <button
-                            onClick={() => disable(item.key)}
+                            onClick={() => remove(item.id)}
                             title={t('effects.delete')}
                             className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 shadow-sm"
                           >
-                            <span className="material-symbols-outlined text-base">visibility_off</span>
+                            <span className="material-symbols-outlined text-base">delete</span>
                           </button>
-                        )}
-                      </>
-                    )}
-                  </div>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => startEditBuiltin(item)}
+                            title={t('effects.edit')}
+                            className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 shadow-sm"
+                          >
+                            <span className="material-symbols-outlined text-base">edit</span>
+                          </button>
+                          {item.isDisabled ? (
+                            <button
+                              onClick={() => enable(item.key)}
+                              title={t('effects.restore') || '恢复'}
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-green-100 dark:hover:bg-green-900/40 text-green-600 dark:text-green-400 shadow-sm"
+                            >
+                              <span className="material-symbols-outlined text-base">visibility</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => disable(item.key)}
+                              title={t('effects.delete')}
+                              className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-white/80 dark:bg-gray-900/80 border border-black/10 dark:border-white/10 hover:bg-red-100 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400 shadow-sm"
+                            >
+                              <span className="material-symbols-outlined text-base">visibility_off</span>
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
+                  )}
                   <span className="text-4xl mb-2 material-symbols-outlined">{item.icon}</span>
                   <span className="font-semibold text-sm text-gray-900 dark:text-gray-200 line-clamp-2">{item.title}</span>
                 </div>
