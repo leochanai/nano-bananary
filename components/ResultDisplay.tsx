@@ -1,4 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useI18n } from '../i18n';
 import type { GeneratedContent } from '../types';
 
 interface ResultDisplayProps {
@@ -12,6 +13,7 @@ type ViewMode = 'result' | 'side-by-side' | 'slider';
 
 const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, onImageClick, originalImageUrl }) => {
   const [viewMode, setViewMode] = useState<ViewMode>('result');
+  const { t } = useI18n();
   
   const sliderContainerRef = useRef<HTMLDivElement>(null);
   const [sliderPosition, setSliderPosition] = useState(50);
@@ -103,7 +105,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
                 : 'text-gray-300 hover:bg-gray-700'
             }`}
           >
-            {mode.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {mode === 'result' ? t('view.result') : mode === 'side-by-side' ? t('view.sideBySide') : t('view.slider')}
           </button>
         ))}
       </div>
@@ -120,7 +122,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
             className="w-full h-full relative bg-black rounded-lg overflow-hidden shadow-inner cursor-pointer group border border-white/10 flex items-center justify-center"
             onClick={() => onImageClick(content.imageUrl!)}
           >
-            <img src={content.imageUrl} alt="Generated result" className="max-w-full max-h-full object-contain" />
+            <img src={content.imageUrl} alt={t('common.generated')} className="max-w-full max-h-full object-contain" />
             <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -132,12 +134,12 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
         {viewMode === 'side-by-side' && content.imageUrl && originalImageUrl && (
           <div className="w-full h-full grid grid-cols-2 gap-2">
             <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black flex items-center justify-center">
-                <img src={originalImageUrl} alt="Original" className="max-w-full max-h-full object-contain"/>
-                <div className="absolute bottom-1 right-1 text-xs bg-black/50 text-white px-2 py-1 rounded">Original</div>
+                <img src={originalImageUrl} alt={t('common.original')} className="max-w-full max-h-full object-contain"/>
+                <div className="absolute bottom-1 right-1 text-xs bg-black/50 text-white px-2 py-1 rounded">{t('common.original')}</div>
             </div>
             <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black flex items-center justify-center">
-                <img src={content.imageUrl} alt="Generated" className="max-w-full max-h-full object-contain"/>
-                <div className="absolute bottom-1 right-1 text-xs bg-black/50 text-white px-2 py-1 rounded">Generated</div>
+                <img src={content.imageUrl} alt={t('common.generated')} className="max-w-full max-h-full object-contain"/>
+                <div className="absolute bottom-1 right-1 text-xs bg-black/50 text-white px-2 py-1 rounded">{t('common.generated')}</div>
             </div>
           </div>
         )}
@@ -145,10 +147,10 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
         {viewMode === 'slider' && content.imageUrl && originalImageUrl && (
           <div ref={sliderContainerRef} onMouseDown={handleMouseDown} className="relative w-full h-full overflow-hidden rounded-lg cursor-ew-resize border border-white/10 select-none bg-black">
             <div className="absolute inset-0 flex items-center justify-center">
-                <img src={originalImageUrl} alt="Original" className="max-w-full max-h-full object-contain" />
+                <img src={originalImageUrl} alt={t('common.original')} className="max-w-full max-h-full object-contain" />
             </div>
             <div className="absolute inset-0 flex items-center justify-center" style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}>
-              <img src={content.imageUrl} alt="Generated" className="max-w-full max-h-full object-contain" />
+              <img src={content.imageUrl} alt={t('common.generated')} className="max-w-full max-h-full object-contain" />
             </div>
             <div className="absolute top-0 bottom-0 bg-orange-500 w-1 cursor-ew-resize" style={{ left: `calc(${sliderPosition}% - 2px)` }}>
                 <div className="absolute top-1/2 -translate-y-1/2 -left-3.5 bg-orange-500 h-8 w-8 rounded-full border-2 border-black flex items-center justify-center text-black">
@@ -168,7 +170,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
                     className="flex-1 py-2 px-4 bg-gray-800 text-gray-200 font-semibold rounded-lg shadow-sm hover:bg-gray-700 transition-all duration-200 flex items-center justify-center gap-2"
                 >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM15 3a1 1 0 011 1v12a1 1 0 11-2 0V4a1 1 0 011-1z" /></svg>
-                <span>Download Comparison</span>
+                <span>{t('actions.downloadComparison')}</span>
               </button>
             )}
             <button
@@ -178,7 +180,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>
-              <span>Download Image</span>
+              <span>{t('actions.downloadImage')}</span>
             </button>
             <button
               onClick={onUseAsInput}
@@ -188,7 +190,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
                 <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
                 <path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" />
               </svg>
-              <span>Use as Input</span>
+              <span>{t('actions.useAsInput')}</span>
             </button>
           </>
         )}
