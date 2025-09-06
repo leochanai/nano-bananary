@@ -138,8 +138,8 @@
   "color_palette_swap": {
     "en_name": "Color Palette Swap",
     "zh_name": "色彩调和",
-    "en_prompt": "Turn this image into a clean, hand-drawn line art sketch.",
-    "zh_prompt": "将此图像转换成干净的手绘线稿素描。",
+    "en_prompt": "Color the line art.",
+    "zh_prompt": "为线条画稿着色。",
     "icon": "palette",
     "type": "style"
   },
