@@ -266,6 +266,15 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
 
     try {
       const newFile = await dataUrlToFile(generatedContent.imageUrl, `edited-${Date.now()}.png`);
+      // 将结果图作为新的输入：清空旧图并放入第一个槽位
+      setImages([
+        {
+          id: `${Date.now()}-${Math.random()}`,
+          file: newFile,
+          dataUrl: generatedContent.imageUrl,
+        },
+      ]);
+      setActiveIndex(0);
       setSelectedFile(newFile);
       setImagePreviewUrl(generatedContent.imageUrl);
       setGeneratedContent(null);
