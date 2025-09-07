@@ -1,7 +1,7 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useI18n } from '../i18n';
 import { editImage, editImages } from '../services/geminiService';
-import type { GeneratedContent, Transformation, UploadedImage } from '../types';
+import type { GeneratedContent, Transformation, UploadedImage, TransformationCategory } from '../types';
 import TransformationSelector from './TransformationSelector';
 import ResultDisplay from './ResultDisplay';
 import LoadingSpinner from './LoadingSpinner';
@@ -29,6 +29,8 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
   const [selectedTransformation, setSelectedTransformation] = useState<Transformation | null>(
     preSelectedEffect || null
   );
+  const [showFullSelector, setShowFullSelector] = useState<boolean>(false);
+  const [selectedCategory, setSelectedCategory] = useState<TransformationCategory | null>(null);
   
   // Multi-image state
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -49,8 +51,25 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
   React.useEffect(() => {
     if (preSelectedEffect) {
       setSelectedTransformation(preSelectedEffect);
+      setSelectedCategory(preSelectedEffect.category || null);
     }
   }, [preSelectedEffect]);
+
+  // Get effects by category
+  const effectsByCategory = useMemo(() => {
+    if (!selectedCategory) return [];
+    return transformations.filter(t => t.category === selectedCategory);
+  }, [selectedCategory, transformations]);
+
+  // Category list
+  const categories: { key: TransformationCategory; label: string; icon: string }[] = [
+    { key: 'custom', label: t('categories.custom'), icon: 'edit' },
+    { key: 'style', label: t('categories.style'), icon: 'palette' },
+    { key: 'elements', label: t('categories.elements'), icon: 'add_photo_alternate' },
+    { key: 'scene', label: t('categories.scene'), icon: 'landscape' },
+    { key: 'lighting', label: t('categories.lighting'), icon: 'light_mode' },
+    { key: 'special', label: t('categories.special'), icon: 'auto_awesome' },
+  ];
 
   const switchToMulti = useCallback(() => {
     if (isMultiMode) return;
@@ -97,6 +116,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     if (transformation.prompt !== 'CUSTOM') {
       setCustomPrompt('');
     }
+    setShowFullSelector(false);
   };
 
   const handleImageSelect = useCallback((file: File, dataUrl: string) => {
@@ -254,6 +274,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
       setMaskDataUrl(null);
       setActiveTool('none');
       setSelectedTransformation(null);
+      setSelectedCategory(null);
     } catch (err) {
       console.error("Failed to use image as input:", err);
       setError(t('errors.useAsInputFailed'));
@@ -261,7 +282,11 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
   }, [generatedContent, t]);
 
   const handleBackToSelection = () => {
-    setSelectedTransformation(null);
+    setShowFullSelector(true);
+  };
+  
+  const handleCloseFullSelector = () => {
+    setShowFullSelector(false);
   };
 
   const toggleMaskTool = () => {
@@ -272,94 +297,79 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
   const isGenerateDisabled = !hasAnyInput || isLoading || 
     (selectedTransformation?.prompt === 'CUSTOM' && !customPrompt.trim());
 
-  // Show effect selector if no transformation is selected
-  if (!selectedTransformation) {
+  // Show full effect selector if requested
+  if (showFullSelector) {
     return (
-      <TransformationSelector 
-        transformations={transformations} 
-        onSelect={handleSelectTransformation} 
-        hasPreviousResult={!!imagePreviewUrl}
-      />
+      <div>
+        <div className="container mx-auto p-4 md:p-8">
+          <button
+            onClick={handleCloseFullSelector}
+            className="mb-4 flex items-center gap-2 text-orange-500 hover:text-orange-400 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            {t('common.back')}
+          </button>
+        </div>
+        <TransformationSelector 
+          transformations={transformations} 
+          onSelect={handleSelectTransformation} 
+          hasPreviousResult={!!imagePreviewUrl}
+        />
+      </div>
     );
   }
 
   // Main processing view
   return (
     <div className="container mx-auto p-4 md:p-8 animate-fade-in">
-      <div className="mb-8">
-        <button
-          onClick={handleBackToSelection}
-          className="flex items-center gap-2 text-orange-500 hover:text-orange-400 transition-colors duration-200 py-2 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-            <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-          {t('actions.chooseAnotherEffect')}
-        </button>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Input Column */}
         <div className="flex flex-col gap-6 p-6 bg-white/70 dark:bg-gray-950/60 backdrop-blur-lg rounded-xl border border-black/10 dark:border-white/10 shadow-2xl shadow-black/20">
           <div>
-            <div className="mb-4">
-              <h2 className="text-xl font-semibold mb-1 text-orange-500 flex items-center gap-3">
-                <span className="text-3xl material-symbols-outlined">{selectedTransformation.icon}</span>
-                {selectedTransformation.title}
-              </h2>
-              {selectedTransformation.prompt === 'CUSTOM' ? (
-                <textarea
-                  value={customPrompt}
-                  onChange={(e) => setCustomPrompt(e.target.value)}
-                  placeholder={t('placeholder.customPrompt')}
-                  rows={3}
-                  className="w-full mt-2 p-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
+            {/* Step 1: Upload Image */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                1. {t('upload.clickToUpload')}
+              </h3>
+              
+              {/* Mode Switch */}
+              <div className="mb-3 flex items-center justify-between">
+                <div className="inline-flex rounded-md overflow-hidden border border-black/10 dark:border-white/10">
+                  <button
+                    onClick={switchToSingle}
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      !isMultiMode 
+                        ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' 
+                        : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {t('upload.singleMode')}
+                  </button>
+                  <button
+                    onClick={switchToMulti}
+                    className={`px-3 py-1 text-sm transition-colors ${
+                      isMultiMode 
+                        ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' 
+                        : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                    }`}
+                  >
+                    {t('upload.multipleMode')}
+                  </button>
+                </div>
+              </div>
+
+              {/* Image Upload */}
+              {isMultiMode ? (
+                <ImageUploader
+                  images={images}
+                  onAdd={addImages}
+                  onRemove={removeImageAt}
+                  max={3}
+                  showSlots
                 />
               ) : (
-                <p className="text-gray-600 dark:text-gray-400">{selectedTransformation.prompt}</p>
-              )}
-            </div>
-            
-            {/* Mode Switch */}
-            <div className="mb-3 flex items-center justify-between">
-              <div className="inline-flex rounded-md overflow-hidden border border-black/10 dark:border-white/10">
-                <button
-                  onClick={switchToSingle}
-                  className={`px-3 py-1 text-sm transition-colors ${
-                    !isMultiMode 
-                      ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' 
-                      : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  {t('upload.singleMode')}
-                </button>
-                <button
-                  onClick={switchToMulti}
-                  className={`px-3 py-1 text-sm transition-colors ${
-                    isMultiMode 
-                      ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' 
-                      : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                  }`}
-                >
-                  {t('upload.multipleMode')}
-                </button>
-              </div>
-            </div>
-
-            {/* Multi uploader */}
-            {isMultiMode && (
-              <ImageUploader
-                images={images}
-                onAdd={addImages}
-                onRemove={removeImageAt}
-                max={3}
-                showSlots
-              />
-            )}
-
-            {!isMultiMode && (
-              <>
-                <div className="mt-4" />
                 <ImageEditorCanvas
                   imageUrl={imagePreviewUrl}
                   selectedFile={selectedFile}
@@ -369,7 +379,89 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
                   onClearImage={handleClearImage}
                   onMaskUpdate={setMaskDataUrl}
                 />
-              </>
+              )}
+            </div>
+
+            {/* Step 2: Choose Effect - Only show if image is uploaded */}
+            {hasAnyInput && (
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
+                  2. {t('selector.chooseEffect')}
+                </h3>
+
+                {/* Category Selection */}
+                <div className="mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">选择效果类型：</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {categories.map(cat => (
+                      <button
+                        key={cat.key}
+                        onClick={() => setSelectedCategory(cat.key)}
+                        className={`p-3 rounded-lg border transition-all duration-200 ${
+                          selectedCategory === cat.key
+                            ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-black border-transparent'
+                            : 'bg-white dark:bg-gray-950 border-black/10 dark:border-white/10 hover:border-orange-500'
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-xl mb-1 block">{cat.icon}</span>
+                        <span className="text-xs font-medium">{cat.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Effect Selection - Show when category is selected */}
+                {selectedCategory && (
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">选择具体效果：</p>
+                    <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                      {effectsByCategory.map((effect, index) => (
+                        <button
+                          key={index}
+                          onClick={() => handleSelectTransformation(effect)}
+                          className={`p-2 rounded-lg border transition-all duration-200 text-left ${
+                            selectedTransformation?.title === effect.title
+                              ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-black border-transparent'
+                              : 'bg-white dark:bg-gray-950 border-black/10 dark:border-white/10 hover:border-orange-500'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-lg">{effect.icon}</span>
+                            <span className="text-xs font-medium">{effect.title}</span>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      onClick={handleBackToSelection}
+                      className="mt-2 text-xs text-orange-500 hover:text-orange-600"
+                    >
+                      查看所有效果 →
+                    </button>
+                  </div>
+                )}
+
+                {/* Selected Effect Details */}
+                {selectedTransformation && (
+                  <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <h4 className="font-semibold text-orange-600 dark:text-orange-400 flex items-center gap-2">
+                      <span className="material-symbols-outlined">{selectedTransformation.icon}</span>
+                      {selectedTransformation.title}
+                    </h4>
+                    {selectedTransformation.prompt === 'CUSTOM' ? (
+                      <textarea
+                        value={customPrompt}
+                        onChange={(e) => setCustomPrompt(e.target.value)}
+                        placeholder={t('placeholder.customPrompt')}
+                        rows={2}
+                        className="w-full mt-2 p-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
+                      />
+                    ) : (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{selectedTransformation.prompt}</p>
+                    )}
+                  </div>
+                )}
+              </div>
             )}
           </div>
 

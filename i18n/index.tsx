@@ -14,6 +14,8 @@ const RESOURCES: Resources = {
       generated: '生成图',
       close: '关闭',
       unknown: '未知',
+      back: '返回',
+      selected: '已选择',
     },
     categories: {
       all: '全部',
@@ -182,6 +184,8 @@ const RESOURCES: Resources = {
       generated: 'Generated',
       close: 'Close',
       unknown: 'Unknown',
+      back: 'Back',
+      selected: 'Selected',
     },
     categories: {
       all: 'All',
