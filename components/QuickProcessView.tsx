@@ -30,7 +30,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     preSelectedEffect || null
   );
   const [showFullSelector, setShowFullSelector] = useState<boolean>(false);
-  const [selectedCategory, setSelectedCategory] = useState<TransformationCategory | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<TransformationCategory | null>('custom');
   
   // Multi-image state
   const [images, setImages] = useState<UploadedImage[]>([]);
@@ -55,6 +55,19 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
       setSelectedCategory(preSelectedEffect.category || null);
     }
   }, [preSelectedEffect]);
+
+  // 当 effects 加载完成且未有预选时，默认选择 自定义 - 自定义提示词
+  React.useEffect(() => {
+    if (!preSelectedEffect && !selectedTransformation && transformations && transformations.length > 0) {
+      const customEffect = transformations.find(t => t.prompt === 'CUSTOM');
+      if (customEffect) {
+        setSelectedTransformation(customEffect);
+        setSelectedCategory(customEffect.category || 'custom');
+      } else {
+        setSelectedCategory('custom');
+      }
+    }
+  }, [transformations, preSelectedEffect, selectedTransformation]);
 
   // Get effects by category
   const effectsByCategory = useMemo(() => {
@@ -294,9 +307,8 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
               />
             </div>
 
-            {/* Step 2: Choose Effect - Only show if image is uploaded */}
-            {hasAnyInput && (
-              <div className="mb-6">
+            {/* Step 2: Choose Effect - Always visible */}
+            <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
                   2. {t('selector.chooseEffect')}
                 </h3>
@@ -374,7 +386,6 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
                   </div>
                 )}
               </div>
-            )}
           </div>
 
           {/* Action Buttons */}
