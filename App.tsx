@@ -1,40 +1,24 @@
-
 import React, { useState, useCallback } from 'react';
 import { useI18n } from './i18n';
 import { useTransformations } from './constants';
-import { editImage, editImages } from './services/geminiService';
-import type { GeneratedContent, Transformation, UploadedImage } from './types';
-import TransformationSelector from './components/TransformationSelector';
-import ResultDisplay from './components/ResultDisplay';
-import LoadingSpinner from './components/LoadingSpinner';
-import ErrorMessage from './components/ErrorMessage';
-import ImageEditorCanvas from './components/ImageEditorCanvas';
-import { dataUrlToFile, embedWatermark } from './utils/fileUtils';
+import type { PageMode, Transformation } from './types';
+import NavigationBar from './components/NavigationBar';
+import QuickProcessView from './components/QuickProcessView';
+import GalleryView from './components/GalleryView';
 import ImagePreviewModal from './components/ImagePreviewModal';
 import EffectManager from './components/EffectManager';
-import ImageUploader from './components/ImageUploader';
-
-type ActiveTool = 'mask' | 'none';
 
 const App: React.FC = () => {
-  const { t, lang, setLang } = useI18n();
-  const [isManagingEffects, setIsManagingEffects] = useState<boolean>(false);
+  const { lang, setLang } = useI18n();
   const transformations = useTransformations();
-  const [selectedTransformation, setSelectedTransformation] = useState<Transformation | null>(null);
-  // Multi-image state
-  const [images, setImages] = useState<UploadedImage[]>([]);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [maskDataUrl, setMaskDataUrl] = useState<string | null>(null);
+  
+  // Page state
+  const [currentMode, setCurrentMode] = useState<PageMode>('quick');
+  const [isManagingEffects, setIsManagingEffects] = useState<boolean>(false);
+  const [preSelectedEffect, setPreSelectedEffect] = useState<Transformation | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
-  const [customPrompt, setCustomPrompt] = useState<string>('');
-  const [activeTool, setActiveTool] = useState<ActiveTool>('none');
-  const [isMultiMode, setIsMultiMode] = useState<boolean>(false);
 
+  // Theme state
   const [isDark, setIsDark] = useState<boolean>(() => {
     if (typeof document === 'undefined') return true;
     return document.documentElement.classList.contains('dark');
@@ -54,42 +38,6 @@ const App: React.FC = () => {
       try { localStorage.setItem('app.theme', 'light'); } catch {}
     }
   }, []);
-  const switchToMulti = useCallback(() => {
-    if (isMultiMode) return;
-    // Seed slot 1 with current single image if exists
-    let nextImages = images;
-    if (imagePreviewUrl && selectedFile && images.length === 0) {
-      const seeded: UploadedImage = { id: `${Date.now()}-${Math.random()}`, file: selectedFile, dataUrl: imagePreviewUrl };
-      nextImages = [seeded];
-      setImages(nextImages);
-    }
-    // Auto-activate first slot so user can generate immediately
-    if (nextImages.length > 0) {
-      setActiveIndex(0);
-    } else {
-      setActiveIndex(null);
-    }
-    setMaskDataUrl(null);
-    setActiveTool('none');
-    setGeneratedContent(null);
-    setError(null);
-    setIsMultiMode(true);
-  }, [isMultiMode, imagePreviewUrl, selectedFile, images.length]);
-
-  const switchToSingle = useCallback(() => {
-    if (!isMultiMode) return;
-    // Prefer active image, fallback to first slot
-    const idx = (activeIndex ?? 0);
-    const src = images[idx];
-    if (src) {
-      setSelectedFile(src.file);
-      setImagePreviewUrl(src.dataUrl);
-    } else {
-      setSelectedFile(null);
-      setImagePreviewUrl(null);
-    }
-    setIsMultiMode(false);
-  }, [isMultiMode, images, activeIndex]);
 
   const toggleLanguage = useCallback(() => {
     setLang(lang === 'zh' ? 'en' : 'zh');
@@ -99,406 +47,61 @@ const App: React.FC = () => {
     setIsManagingEffects((v) => !v);
   }, []);
 
-  const handleSelectTransformation = (transformation: Transformation) => {
-    setSelectedTransformation(transformation);
-    setGeneratedContent(null);
-    setError(null);
-    if (transformation.prompt !== 'CUSTOM') {
-      setCustomPrompt('');
+  const handleModeChange = useCallback((mode: PageMode) => {
+    setCurrentMode(mode);
+    // Clear pre-selected effect when switching modes
+    if (mode === 'quick') {
+      setPreSelectedEffect(null);
     }
-  };
-
-  const handleImageSelect = useCallback((file: File, dataUrl: string) => {
-    setSelectedFile(file);
-    setImagePreviewUrl(dataUrl);
-    setGeneratedContent(null);
-    setError(null);
-    setMaskDataUrl(null);
-    setActiveTool('none');
   }, []);
 
-  // Integrate ImageUploader
-  const addImages = useCallback((files: File[]) => {
-    const toRead = files.slice(0, Math.max(0, 3 - images.length));
-    const readers = toRead.map(file => new Promise<UploadedImage>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve({ id: `${Date.now()}-${Math.random()}`, file, dataUrl: reader.result as string });
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    }));
-    Promise.all(readers).then(newOnes => {
-      setImages(prev => {
-        const combined = [...prev, ...newOnes].slice(0, 3);
-        if (!isMultiMode) {
-          const nextActive = combined.length > 0 ? (prev.length === 0 ? 0 : activeIndex ?? 0) : null;
-          setActiveIndex(nextActive);
-          if (nextActive !== null) {
-            setSelectedFile(combined[nextActive].file);
-            setImagePreviewUrl(combined[nextActive].dataUrl);
-          }
-        } else {
-          // In multi-mode, if nothing is active, activate first slot so Generate can be used
-          if (combined.length > 0 && (activeIndex === null || !imagePreviewUrl)) {
-            setActiveIndex(0);
-            setSelectedFile(combined[0].file);
-            setImagePreviewUrl(combined[0].dataUrl);
-          }
-        }
-        return combined;
-      });
-      setMaskDataUrl(null);
-      setGeneratedContent(null);
-      setError(null);
-      setActiveTool('none');
-    });
-  }, [images.length, activeIndex, isMultiMode]);
+  const handleCreateSame = useCallback((effect: Transformation) => {
+    // Set the selected effect and switch to quick process mode
+    setPreSelectedEffect(effect);
+    setCurrentMode('quick');
+  }, []);
 
-  const removeImageAt = useCallback((index: number) => {
-    setImages(prev => {
-      const next = prev.filter((_, i) => i !== index);
-      let nextActive: number | null = null;
-      if (next.length === 0) {
-        nextActive = null;
-      } else if (activeIndex !== null) {
-        if (index < activeIndex) nextActive = activeIndex - 1; else if (index === activeIndex) nextActive = Math.min(activeIndex, next.length - 1); else nextActive = activeIndex;
-      }
-      setActiveIndex(nextActive);
-      if (nextActive !== null) {
-        setSelectedFile(next[nextActive].file);
-        setImagePreviewUrl(next[nextActive].dataUrl);
-      } else {
-        setSelectedFile(null);
-        setImagePreviewUrl(null);
-      }
-      setGeneratedContent(null);
-      setError(null);
-      setMaskDataUrl(null);
-      setActiveTool('none');
-      return next;
-    });
-  }, [activeIndex]);
-
-  // No need to activate images in multi mode anymore
-  
-  const handleClearImage = () => {
-    setImagePreviewUrl(null);
-    setSelectedFile(null);
-    setGeneratedContent(null);
-    setError(null);
-    setMaskDataUrl(null);
-    setActiveTool('none');
-  };
-
-  const handleGenerate = useCallback(async () => {
-    if (!selectedTransformation) {
-      setError(t('errors.uploadAndSelect'));
-      return;
-    }
-
-    const promptToUse = selectedTransformation.prompt === 'CUSTOM' ? customPrompt : selectedTransformation.prompt;
-    if (!promptToUse.trim()) {
-      setError(t('errors.enterPrompt'));
-      return;
-    }
-
-    setIsLoading(true);
-    setError(null);
-    setGeneratedContent(null);
-
-    try {
-      let result: GeneratedContent;
-      if (isMultiMode) {
-        const prepared = images.map(img => {
-          const mimeType = img.dataUrl.split(';')[0].split(':')[1] ?? 'image/png';
-          const base64 = img.dataUrl.split(',')[1];
-          return { base64, mimeType };
-        });
-        if (prepared.length === 0) {
-          throw new Error(t('errors.uploadAndSelect'));
-        }
-        result = await editImages(prepared, promptToUse);
-      } else {
-        if (!imagePreviewUrl) throw new Error(t('errors.uploadAndSelect'));
-        const mimeType = imagePreviewUrl.split(';')[0].split(':')[1] ?? 'image/png';
-        const base64 = imagePreviewUrl.split(',')[1];
-        const maskBase64 = maskDataUrl ? maskDataUrl.split(',')[1] : null;
-        result = await editImage(base64, mimeType, promptToUse, maskBase64);
-      }
-
-      if (result.imageUrl) {
-        result.imageUrl = await embedWatermark(result.imageUrl, "Creative Banana");
-      }
-      setGeneratedContent(result);
-    } catch (err) {
-      console.error(err);
-      setError(err instanceof Error ? err.message : t('errors.unknown'));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [selectedTransformation, customPrompt, isMultiMode, images, imagePreviewUrl, maskDataUrl]);
-
-  const handleUseResultAsInput = useCallback(async () => {
-    if (!generatedContent?.imageUrl) return;
-
-    try {
-      const newFile = await dataUrlToFile(generatedContent.imageUrl, `edited-${Date.now()}.png`);
-      setSelectedFile(newFile);
-      setImagePreviewUrl(generatedContent.imageUrl);
-      setGeneratedContent(null);
-      setError(null);
-      setMaskDataUrl(null);
-      setActiveTool('none');
-      setSelectedTransformation(null); // Go back to effect selection
-    } catch (err) {
-      console.error("Failed to use image as input:", err);
-      setError(t('errors.useAsInputFailed'));
-    }
-  }, [generatedContent]);
-
-  const handleBackToSelection = () => {
-    setSelectedTransformation(null);
-  };
-
-  const handleResetApp = () => {
-    setSelectedTransformation(null);
-    setImages([]);
-    setActiveIndex(null);
-    setImagePreviewUrl(null);
-    setSelectedFile(null);
-    setGeneratedContent(null);
-    setError(null);
-    setIsLoading(false);
-    setMaskDataUrl(null);
-    setCustomPrompt('');
-    setActiveTool('none');
-    setIsManagingEffects(false);
-  };
-
-  const handleOpenPreview = (url: string) => setPreviewImageUrl(url);
   const handleClosePreview = () => setPreviewImageUrl(null);
-  
-  const toggleMaskTool = () => {
-    setActiveTool(current => (current === 'mask' ? 'none' : 'mask'));
-  };
-
-  const hasAnyInput = isMultiMode ? images.length > 0 : !!imagePreviewUrl;
-  const isGenerateDisabled = !hasAnyInput || isLoading || (selectedTransformation?.prompt === 'CUSTOM' && !customPrompt.trim());
 
   return (
     <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-300 font-sans">
-      <header className="bg-white/70 dark:bg-black/60 backdrop-blur-lg sticky top-0 z-20 p-4 border-b border-black/10 dark:border-white/10">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-2xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-yellow-400 cursor-pointer flex items-center gap-2" onClick={handleResetApp}>
-            <span className="material-symbols-outlined text-3xl">hub</span>
-            <span>Creative Banana</span>
-          </h1>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              aria-label="切换主题"
-              title={isDark ? '切换到浅色' : '切换到深色'}
-              className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <span className="material-symbols-outlined align-middle">{isDark ? 'light_mode' : 'dark_mode'}</span>
-            </button>
-            <button
-              onClick={toggleLanguage}
-              aria-label="切换语言"
-              title={lang === 'zh' ? 'Switch to English' : '切换到中文'}
-              className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <span className="material-symbols-outlined align-middle">translate</span>
-            </button>
-            <button
-              onClick={toggleEffectManager}
-              aria-label={t('effects.manage')}
-              title={t('effects.manage')}
-              className="px-2 py-1 text-sm rounded bg-gray-200 text-gray-900 hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              <span className="material-symbols-outlined align-middle">{isManagingEffects ? 'close' : 'tune'}</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      {/* Navigation Bar */}
+      <NavigationBar
+        currentMode={currentMode}
+        onModeChange={handleModeChange}
+        isDark={isDark}
+        onToggleTheme={toggleTheme}
+        onToggleLanguage={toggleLanguage}
+        onToggleEffectManager={toggleEffectManager}
+      />
 
-      <main>
+      {/* Main Content */}
+      <main className="pt-2">
         {isManagingEffects ? (
           <EffectManager />
-        ) : !selectedTransformation ? (
-          <TransformationSelector 
-            transformations={transformations} 
-            onSelect={handleSelectTransformation} 
-            hasPreviousResult={!!imagePreviewUrl}
+        ) : currentMode === 'gallery' ? (
+          <GalleryView
+            transformations={transformations}
+            onCreateSame={handleCreateSame}
           />
         ) : (
-          <div className="container mx-auto p-4 md:p-8 animate-fade-in">
-            <div className="mb-8">
-              <button
-                onClick={handleBackToSelection}
-                className="flex items-center gap-2 text-orange-500 hover:text-orange-400 transition-colors duration-200 py-2 px-4 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-900"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-                {t('actions.chooseAnotherEffect')}
-              </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Input Column */}
-              <div className="flex flex-col gap-6 p-6 bg-white/70 dark:bg-gray-950/60 backdrop-blur-lg rounded-xl border border-black/10 dark:border-white/10 shadow-2xl shadow-black/20">
-                <div>
-                  <div className="mb-4">
-                    <h2 className="text-xl font-semibold mb-1 text-orange-500 flex items-center gap-3">
-                      <span className="text-3xl material-symbols-outlined">{selectedTransformation.icon}</span>
-                      {selectedTransformation.title}
-                    </h2>
-                    {selectedTransformation.prompt === 'CUSTOM' ? (
-                        <textarea
-                            value={customPrompt}
-                            onChange={(e) => setCustomPrompt(e.target.value)}
-                            placeholder={t('placeholder.customPrompt')}
-                            rows={3}
-                            className="w-full mt-2 p-3 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
-                        />
-                    ) : (
-                       <p className="text-gray-600 dark:text-gray-400">{selectedTransformation.prompt}</p>
-                    )}
-                  </div>
-                  
-                  {/* Mode Switch */}
-                  <div className="mb-3 flex items-center justify-between">
-                    <div className="inline-flex rounded-md overflow-hidden border border-black/10 dark:border-white/10">
-                      <button
-                        onClick={switchToSingle}
-                        className={`px-3 py-1 text-sm transition-colors ${!isMultiMode ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-                      >
-                        {t('upload.singleMode')}
-                      </button>
-                      <button
-                        onClick={switchToMulti}
-                        className={`px-3 py-1 text-sm transition-colors ${isMultiMode ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'}`}
-                      >
-                        {t('upload.multipleMode')}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Multi uploader */}
-                  {isMultiMode && (
-                    <ImageUploader
-                      images={images}
-                      onAdd={addImages}
-                      onRemove={removeImageAt}
-                      max={3}
-                      showSlots
-                    />
-                  )}
-
-                  {!isMultiMode && (
-                    <>
-                      <div className="mt-4" />
-                      <ImageEditorCanvas
-                        onImageSelect={handleImageSelect}
-                        initialImageUrl={imagePreviewUrl}
-                        onMaskChange={setMaskDataUrl}
-                        onClearImage={handleClearImage}
-                        isMaskToolActive={activeTool === 'mask'}
-                        disableUpload={false}
-                        initialMaskUrl={maskDataUrl}
-                      />
-                    </>
-                  )}
-
-                  {!isMultiMode && imagePreviewUrl && (
-                    <div className="mt-4">
-                        <button
-                            onClick={toggleMaskTool}
-                            className={`w-full flex items-center justify-center gap-2 py-2 px-3 text-sm font-semibold rounded-md transition-colors duration-200 ${
-                                activeTool === 'mask' ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-black' : 'bg-gray-100 text-gray-900 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700'
-                            }`}
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.5L15.232 5.232z" /></svg>
-                            <span>{t('actions.drawMask')}</span>
-                        </button>
-                    </div>
-                  )}
-                  
-                   <button
-                    onClick={handleGenerate}
-                    disabled={isGenerateDisabled}
-                    className="w-full mt-6 py-3 px-4 bg-gradient-to-r from-orange-500 to-yellow-400 text-black font-semibold rounded-lg shadow-lg shadow-orange-500/20 hover:from-orange-600 hover:to-yellow-500 disabled:bg-gray-200 dark:disabled:bg-gray-800 disabled:from-gray-200 dark:disabled:from-gray-800 disabled:to-gray-200 dark:disabled:to-gray-800 disabled:text-gray-400 dark:disabled:text-gray-500 disabled:shadow-none disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    {isLoading ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        <span>{t('actions.generating')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        <span>{t('actions.generate')}</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Output Column */}
-              <div className="flex flex-col p-6 bg-white/70 dark:bg-gray-950/60 backdrop-blur-lg rounded-xl border border-black/10 dark:border-white/10 shadow-2xl shadow-black/20">
-                <h2 className="text-xl font-semibold mb-4 text-orange-500 self-start">{t('common.result')}</h2>
-                {isLoading && <div className="flex-grow flex items-center justify-center"><LoadingSpinner /></div>}
-                {error && <div className="flex-grow flex items-center justify-center w-full"><ErrorMessage message={error} /></div>}
-                {!isLoading && !error && generatedContent && (
-                    <ResultDisplay 
-                        content={generatedContent} 
-                        onUseAsInput={handleUseResultAsInput}
-                        onImageClick={handleOpenPreview}
-                        originalImageUrl={imagePreviewUrl}
-                    />
-                )}
-                {!isLoading && !error && !generatedContent && (
-                  <div className="flex-grow flex flex-col items-center justify-center text-center text-gray-600 dark:text-gray-500">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <p className="mt-2">{t('empty.hint')}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <QuickProcessView
+            transformations={transformations}
+            preSelectedEffect={preSelectedEffect}
+            onEffectApplied={() => setPreSelectedEffect(null)}
+          />
         )}
       </main>
-      <ImagePreviewModal imageUrl={previewImageUrl} onClose={handleClosePreview} />
+
+      {/* Image Preview Modal */}
+      {previewImageUrl && (
+        <ImagePreviewModal
+          imageUrl={previewImageUrl}
+          onClose={handleClosePreview}
+        />
+      )}
     </div>
   );
 };
-
-// Add fade-in animation for view transitions
-const style = document.createElement('style');
-style.innerHTML = `
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out forwards;
-  }
-  @keyframes fadeInFast {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  .animate-fade-in-fast {
-    animation: fadeInFast 0.2s ease-out forwards;
-  }
-`;
-document.head.appendChild(style);
-
 
 export default App;

@@ -7,6 +7,13 @@ export interface Transformation {
   title: string;
   prompt: string;
   icon: string; // Material Symbols icon name
+  /**
+   * 效果示例图片
+   */
+  example?: {
+    before: string; // 示例原图URL
+    after: string;  // 示例效果图URL
+  };
 }
 
 export interface GeneratedContent {
@@ -28,3 +35,12 @@ export type TransformationCategory =
   | 'scene'
   | 'lighting'
   | 'special';
+
+// 页面模式类型
+export type PageMode = 'quick' | 'gallery';
+
+// 导航参数
+export interface NavigationParams {
+  selectedEffect?: Transformation;
+  fromGallery?: boolean;
+}

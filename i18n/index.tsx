@@ -163,6 +163,17 @@ const RESOURCES: Resources = {
       restore: '恢复',
       showHidden: '显示已隐藏',
     },
+    navigation: {
+      quickProcess: '快速处理',
+      gallery: '效果画廊',
+    },
+    gallery: {
+      title: '效果画廊',
+      subtitle: '浏览所有效果示例',
+      createSame: '制作同款',
+      noExample: '暂无示例',
+      viewEffect: '查看效果',
+    },
   },
   en: {
     common: {
@@ -318,7 +329,18 @@ const RESOURCES: Resources = {
       searchIcons: 'Search icon name…',
       chooseStyle: 'Choose Style',
       restore: 'Restore',
-      showHidden: 'Show hidden',
+      showHidden: 'Show Hidden',
+    },
+    navigation: {
+      quickProcess: 'Quick Process',
+      gallery: 'Effect Gallery',
+    },
+    gallery: {
+      title: 'Effect Gallery',
+      subtitle: 'Browse all effect examples',
+      createSame: 'Create Same',
+      noExample: 'No Example',
+      viewEffect: 'View Effect',
     },
   },
 };
