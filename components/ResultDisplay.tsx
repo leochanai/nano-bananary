@@ -93,7 +93,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
   }, [originalImageUrl, content.imageUrl]);
 
   const ViewSwitcher = () => (
-    <div className="w-full flex justify-center mb-4">
+    <div className="w-full flex justify-center mb-1">
       <div className="p-1 bg-gray-100 dark:bg-gray-900 rounded-lg flex items-center gap-1">
         {(['result', 'side-by-side', 'slider'] as ViewMode[]).map(mode => (
           <button
@@ -113,7 +113,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
   );
 
   return (
-    <div className="w-full h-full flex flex-col items-center gap-4 animate-fade-in">
+    <div className="w-full h-full flex flex-col items-center gap-1 animate-fade-in">
       {content.imageUrl && originalImageUrl && <ViewSwitcher />}
       
       <div className="w-full flex-grow relative min-h-[420px]">
