@@ -1,10 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { useI18n } from './i18n';
 import { useTransformations } from './constants';
-import type { PageMode, Transformation } from './types';
+import type { Transformation } from './types';
 import NavigationBar from './components/NavigationBar';
 import QuickProcessView from './components/QuickProcessView';
-import GalleryView from './components/GalleryView';
 import ImagePreviewModal from './components/ImagePreviewModal';
 import EffectManager from './components/EffectManager';
 
@@ -12,8 +11,7 @@ const App: React.FC = () => {
   const { lang, setLang } = useI18n();
   const transformations = useTransformations();
   
-  // Page state
-  const [currentMode, setCurrentMode] = useState<PageMode>('quick');
+  // App state
   const [isManagingEffects, setIsManagingEffects] = useState<boolean>(false);
   const [preSelectedEffect, setPreSelectedEffect] = useState<Transformation | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState<string | null>(null);
@@ -47,19 +45,6 @@ const App: React.FC = () => {
     setIsManagingEffects((v) => !v);
   }, []);
 
-  const handleModeChange = useCallback((mode: PageMode) => {
-    setCurrentMode(mode);
-    // Clear pre-selected effect when switching modes
-    if (mode === 'quick') {
-      setPreSelectedEffect(null);
-    }
-  }, []);
-
-  const handleCreateSame = useCallback((effect: Transformation) => {
-    // Set the selected effect and switch to quick process mode
-    setPreSelectedEffect(effect);
-    setCurrentMode('quick');
-  }, []);
 
   const handleClosePreview = () => setPreviewImageUrl(null);
 
@@ -67,8 +52,6 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-300 font-sans">
       {/* Navigation Bar */}
       <NavigationBar
-        currentMode={currentMode}
-        onModeChange={handleModeChange}
         isDark={isDark}
         onToggleTheme={toggleTheme}
         onToggleLanguage={toggleLanguage}
@@ -79,11 +62,6 @@ const App: React.FC = () => {
       <main className="pt-2">
         {isManagingEffects ? (
           <EffectManager />
-        ) : currentMode === 'gallery' ? (
-          <GalleryView
-            transformations={transformations}
-            onCreateSame={handleCreateSame}
-          />
         ) : (
           <QuickProcessView
             transformations={transformations}

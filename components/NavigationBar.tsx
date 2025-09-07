@@ -1,10 +1,7 @@
 import React from 'react';
 import { useI18n } from '../i18n';
-import type { PageMode } from '../types';
 
 interface NavigationBarProps {
-  currentMode: PageMode;
-  onModeChange: (mode: PageMode) => void;
   isDark: boolean;
   onToggleTheme: () => void;
   onToggleLanguage: () => void;
@@ -12,8 +9,6 @@ interface NavigationBarProps {
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({
-  currentMode,
-  onModeChange,
   isDark,
   onToggleTheme,
   onToggleLanguage,
@@ -35,29 +30,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
               </span>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => onModeChange('quick')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  currentMode === 'quick'
-                    ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-black shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
-              >
-                {t('navigation.quickProcess')}
-              </button>
-              <button
-                onClick={() => onModeChange('gallery')}
-                className={`px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                  currentMode === 'gallery'
-                    ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-black shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-                }`}
-              >
-                {t('navigation.gallery')}
-              </button>
-            </div>
+            {/* Navigation Tabs - Removed */}
           </div>
 
           {/* Right side controls */}

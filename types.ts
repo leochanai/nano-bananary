@@ -36,11 +36,10 @@ export type TransformationCategory =
   | 'lighting'
   | 'special';
 
-// 页面模式类型
-export type PageMode = 'quick' | 'gallery';
+// 页面模式类型 - 现在只有快速处理模式
+export type PageMode = 'quick';
 
 // 导航参数
 export interface NavigationParams {
   selectedEffect?: Transformation;
-  fromGallery?: boolean;
 }

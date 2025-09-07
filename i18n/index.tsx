@@ -167,14 +167,6 @@ const RESOURCES: Resources = {
     },
     navigation: {
       quickProcess: '快速处理',
-      gallery: '效果画廊',
-    },
-    gallery: {
-      title: '效果画廊',
-      subtitle: '浏览所有效果示例',
-      createSame: '制作同款',
-      noExample: '暂无示例',
-      viewEffect: '查看效果',
     },
   },
   en: {
@@ -337,14 +329,6 @@ const RESOURCES: Resources = {
     },
     navigation: {
       quickProcess: 'Quick Process',
-      gallery: 'Effect Gallery',
-    },
-    gallery: {
-      title: 'Effect Gallery',
-      subtitle: 'Browse all effect examples',
-      createSame: 'Create Same',
-      noExample: 'No Example',
-      viewEffect: 'View Effect',
     },
   },
 };
