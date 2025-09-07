@@ -49,7 +49,7 @@ const App: React.FC = () => {
   const handleClosePreview = () => setPreviewImageUrl(null);
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 dark:bg-black dark:text-gray-300 font-sans">
+    <div className="min-h-screen bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-300 font-sans">
       {/* Navigation Bar */}
       <NavigationBar
         isDark={isDark}

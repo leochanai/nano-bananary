@@ -17,7 +17,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
   const { t, lang } = useI18n();
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/90 dark:bg-black/90 backdrop-blur-md border-b border-black/10 dark:border-white/10">
+    <nav className="sticky top-0 z-50 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo and Navigation Tabs */}
@@ -25,7 +25,7 @@ const NavigationBar: React.FC<NavigationBarProps> = ({
             {/* Logo */}
             <div className="flex items-center gap-2">
               <span className="text-2xl">🍌</span>
-              <span className="text-lg font-bold bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
+              <span className="text-lg font-bold text-orange-500">
                 Creative Banana
               </span>
             </div>

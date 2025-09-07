@@ -49,11 +49,11 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onAdd, onRemove, 
             const img = images[idx];
             const has = Boolean(img);
             return (
-              <div key={has ? img!.id : `slot-${idx}`} className={`relative group aspect-square rounded-lg overflow-hidden border border-black/10 dark:border-white/10 ${!has ? 'bg-gray-50 dark:bg-gray-900/50' : ''}`}>
+              <div key={has ? img!.id : `slot-${idx}`} className={`relative group aspect-square rounded-lg overflow-hidden border-2 ${has ? 'border-solid border-gray-300 dark:border-gray-600' : 'border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800'}`}>
                 {has ? (
                   <img src={img!.dataUrl} alt={`uploaded-${idx}`} className="w-full h-full object-cover" />
                 ) : (
-                  <label className={`absolute inset-0 flex flex-col items-center justify-center text-gray-600 dark:text-gray-500 cursor-pointer w-full h-full ${images.length >= max ? 'pointer-events-none opacity-50' : ''}`}>
+                  <label className={`absolute inset-0 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400 cursor-pointer w-full h-full ${images.length >= max ? 'pointer-events-none opacity-50' : ''}`}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5"><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.158 0h.008v.008h-.008V8.25z" /></svg>
                     <p className="mb-0 text-xs"><span className="font-semibold">{t('upload.clickToUpload')}</span> {t('upload.orDragAndDrop')}</p>
                     <input type="file" accept="image/*" className="hidden" onChange={(e) => {
