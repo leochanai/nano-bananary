@@ -89,9 +89,13 @@ const RESOURCES: Resources = {
       useAsInput: '用作输入',
     },
     selector: {
-      chooseEffect: '选择一个效果',
+      chooseEffect: '选择效果',
       hasPrevious: '已加载上次的结果。请选择新的效果进行应用。',
       initial: '在下方选择一个创意效果。下一步会提示你上传图片。',
+      chooseCategoryLabel: '效果类型：',
+      chooseEffectLabel: '具体效果：',
+      selectCategoryPlaceholder: '请选择类型',
+      selectEffectPlaceholder: '请选择效果',
     },
     search: {
       placeholder: '搜索效果名称或描述…',
@@ -106,7 +110,7 @@ const RESOURCES: Resources = {
       title: '发生错误',
     },
     errors: {
-      uploadAndSelect: '请先上传图片并选择一个效果。',
+      uploadAndSelect: '请先上传图片并选择效果。',
       enterPrompt: '请输入你希望看到的修改描述。',
       unknown: '发生未知错误。',
       useAsInputFailed: '无法将生成的图片用作新的输入。',
@@ -254,6 +258,10 @@ const RESOURCES: Resources = {
       chooseEffect: 'Choose an Effect',
       hasPrevious: 'Your previous result is loaded. Select a new transformation to apply.',
       initial: "Select a creative transformation below. You'll be asked to upload your image on the next step.",
+      chooseCategoryLabel: 'Effect Category:',
+      chooseEffectLabel: 'Effect:',
+      selectCategoryPlaceholder: 'Select a category',
+      selectEffectPlaceholder: 'Select an effect',
     },
     search: {
       placeholder: 'Search effect name or description…',

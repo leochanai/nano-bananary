@@ -80,6 +80,15 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     return transformations.filter(t => t.category === selectedCategory);
   }, [selectedCategory, transformations]);
 
+  // 当前已选效果在该类别列表中的下标，用于效果下拉框受控显示
+  const selectedEffectIndex = useMemo(() => {
+    if (!selectedTransformation) return '';
+    const idx = effectsByCategory.findIndex(e => 
+      e.title === selectedTransformation.title && e.prompt === selectedTransformation.prompt
+    );
+    return idx >= 0 ? String(idx) : '';
+  }, [effectsByCategory, selectedTransformation]);
+
   // Category list
   const categories: { key: TransformationCategory; label: string; icon: string }[] = [
     { key: 'custom', label: t('categories.custom'), icon: 'edit' },
@@ -314,7 +323,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
   // Main processing view
   return (
     <div className="container mx-auto p-4 md:p-8 animate-fade-in">
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-[1424px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Input Column */}
         <div className="flex flex-col gap-6 p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg">
           <div>
@@ -335,54 +344,55 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
             </div>
 
             {/* Step 2: Choose Effect - Always visible */}
-            <div className="mb-6">
+            <div className="mb-2.5">
                 <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-gray-100">
                   2. {t('selector.chooseEffect')}
                 </h3>
 
-                {/* Category Selection */}
+                {/* Category & Effect Selection with dropdowns */}
                 <div className="mb-4">
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">选择效果类型：</p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {categories.map(cat => (
-                      <button
-                        key={cat.key}
-                        onClick={() => setSelectedCategory(cat.key)}
-                        className={`p-4 rounded-lg border-2 transition-all duration-200 ${
-                          selectedCategory === cat.key
-                            ? 'bg-orange-500 text-white border-orange-500 shadow-lg'
-                            : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:border-orange-400'
-                        }`}>
-                        <span className="material-symbols-outlined text-xl mb-1 block">{cat.icon}</span>
-                        <span className="text-xs font-medium">{cat.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {/* Category dropdown */}
+                    <div>
+                      <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">{t('selector.chooseCategoryLabel')}</label>
+                      <select
+                        value={selectedCategory || ''}
+                        onChange={(e) => setSelectedCategory(e.target.value as TransformationCategory)}
+                        className="w-full p-2 text-sm rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                        <option value="" disabled>{t('selector.selectCategoryPlaceholder')}</option>
+                        {categories.map((cat) => (
+                          <option key={cat.key} value={cat.key}>{cat.label}</option>
+                        ))}
+                      </select>
+                    </div>
 
-                {/* Effect Selection - Show when category is selected */}
-                {selectedCategory && (
-                  <div className="mb-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">选择具体效果：</p>
-                    <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      {effectsByCategory.map((effect, index) => (
-                        <button
-                          key={index}
-                          onClick={() => handleSelectTransformation(effect)}
-                          className={`p-2 rounded-lg border transition-all duration-200 text-left ${
-                            selectedTransformation?.title === effect.title
-                              ? 'bg-orange-500 text-white border-transparent'
-                              : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 hover:border-orange-400'
-                          }`}>
-                          <div className="flex items-center gap-2">
-                            <span className="material-symbols-outlined text-lg">{effect.icon}</span>
-                            <span className="text-xs font-medium">{effect.title}</span>
-                          </div>
-                        </button>
-                      ))}
+                    {/* Effect dropdown */}
+                    <div>
+                      <label className="text-sm text-gray-600 dark:text-gray-400 mb-1 block">{t('selector.chooseEffectLabel')}</label>
+                      <select
+                        value={selectedEffectIndex}
+                        onChange={(e) => {
+                          const idx = parseInt(e.target.value, 10);
+                          const effect = Number.isNaN(idx) ? undefined : effectsByCategory[idx];
+                          if (effect) handleSelectTransformation(effect);
+                        }}
+                        disabled={!selectedCategory || effectsByCategory.length === 0}
+                        className="w-full p-2 text-sm rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:bg-gray-100 dark:disabled:bg-gray-700 disabled:text-gray-400">
+                        {(!selectedCategory || effectsByCategory.length === 0) ? (
+                          <option value="">{t('selector.selectEffectPlaceholder')}</option>
+                        ) : (
+                          <>
+                            {effectsByCategory.map((effect, index) => (
+                              <option key={`${effect.title}-${index}`} value={String(index)}>
+                                {effect.title}
+                              </option>
+                            ))}
+                          </>
+                        )}
+                      </select>
                     </div>
                   </div>
-                )}
+                </div>
 
                 {/* Selected Effect Details */}
                 {selectedTransformation && (
@@ -396,7 +406,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
                       onChange={(e) => setCustomPrompt(e.target.value)}
                       placeholder={t('placeholder.customPrompt')}
                       rows={2}
-                      className="w-full mt-2 p-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
+                      className="w-full mt-2 p-2 text-sm min-h-[90px] bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
                     />
                   </div>
                 )}
