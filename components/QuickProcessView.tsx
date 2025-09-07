@@ -53,6 +53,11 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     if (preSelectedEffect) {
       setSelectedTransformation(preSelectedEffect);
       setSelectedCategory(preSelectedEffect.category || null);
+      if (preSelectedEffect.prompt !== 'CUSTOM') {
+        setCustomPrompt(preSelectedEffect.prompt);
+      } else {
+        setCustomPrompt('');
+      }
     }
   }, [preSelectedEffect]);
 
@@ -85,7 +90,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     { key: 'special', label: t('categories.special'), icon: 'auto_awesome' },
   ];
 
-  // 切换类别时，默认选中该类别下的第一个效果
+  // 切换类别时，默认选中该类别下的第一个效果，并同步输入框
   React.useEffect(() => {
     if (!selectedCategory) return;
     const list = transformations.filter(t => t.category === selectedCategory);
@@ -98,6 +103,8 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     if (!selectedTransformation || selectedTransformation.category !== selectedCategory) {
       setSelectedTransformation(list[0]);
       if (list[0].prompt !== 'CUSTOM') {
+        setCustomPrompt(list[0].prompt);
+      } else {
         setCustomPrompt('');
       }
     }
@@ -110,6 +117,8 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     setGeneratedContent(null);
     setError(null);
     if (transformation.prompt !== 'CUSTOM') {
+      setCustomPrompt(transformation.prompt);
+    } else {
       setCustomPrompt('');
     }
     setShowFullSelector(false);
@@ -276,7 +285,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
 
   const hasAnyInput = images.length > 0;
   const isGenerateDisabled = !hasAnyInput || isLoading || 
-    (selectedTransformation?.prompt === 'CUSTOM' && !customPrompt.trim());
+    (!customPrompt.trim());
 
   // Show full effect selector if requested
   if (showFullSelector) {
@@ -374,12 +383,6 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
                         </button>
                       ))}
                     </div>
-                    <button
-                      onClick={handleBackToSelection}
-                      className="mt-2 text-xs text-orange-500 hover:text-orange-600"
-                    >
-                      查看所有效果 →
-                    </button>
                   </div>
                 )}
 
@@ -390,17 +393,13 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
                       <span className="material-symbols-outlined">{selectedTransformation.icon}</span>
                       {selectedTransformation.title}
                     </h4>
-                    {selectedTransformation.prompt === 'CUSTOM' ? (
-                      <textarea
-                        value={customPrompt}
-                        onChange={(e) => setCustomPrompt(e.target.value)}
-                        placeholder={t('placeholder.customPrompt')}
-                        rows={2}
-                        className="w-full mt-2 p-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
-                      />
-                    ) : (
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">{selectedTransformation.prompt}</p>
-                    )}
+                    <textarea
+                      value={customPrompt}
+                      onChange={(e) => setCustomPrompt(e.target.value)}
+                      placeholder={t('placeholder.customPrompt')}
+                      rows={2}
+                      className="w-full mt-2 p-2 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-200 border border-black/20 dark:border-white/20 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-colors placeholder-gray-500"
+                    />
                   </div>
                 )}
               </div>
