@@ -62,13 +62,6 @@ const GalleryView: React.FC<GalleryViewProps> = ({ transformations, onCreateSame
 
   return (
     <div className="container mx-auto p-4 md:p-8 animate-fade-in">
-      {/* Header */}
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
-          {t('gallery.title')}
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400">{t('gallery.subtitle')}</p>
-      </div>
 
       {/* Search and Filter */}
       <div className="sticky top-20 z-10 bg-white/80 dark:bg-black/70 backdrop-blur-md border-b border-black/10 dark:border-white/10 mb-6 -mx-4 md:-mx-8 px-4 md:px-8">
