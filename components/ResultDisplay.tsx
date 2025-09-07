@@ -119,10 +119,12 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
       <div className="w-full flex-grow relative min-h-[420px]">
         {viewMode === 'result' && content.imageUrl && (
           <div 
-            className="w-full h-full relative bg-white dark:bg-black rounded-lg overflow-hidden shadow-inner cursor-pointer group border border-black/10 dark:border-white/10 flex items-center justify-center"
+            className="w-full h-full relative bg-white dark:bg-black rounded-lg overflow-hidden shadow-inner cursor-pointer group border border-black/10 dark:border-white/10"
             onClick={() => onImageClick(content.imageUrl!)}
           >
-            <img src={content.imageUrl} alt={t('common.generated')} className="max-w-full max-h-full object-contain" />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <img src={content.imageUrl} alt={t('common.generated')} className="max-w-full max-h-full object-contain" />
+            </div>
             <div className="absolute inset-0 bg-black/10 dark:bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
