@@ -431,7 +431,9 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
         {/* Result Column */}
         <div className="flex flex-col gap-6 p-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg">
           {isLoading ? (
-            <LoadingSpinner />
+            <div className="h-full flex items-center justify-center">
+              <LoadingSpinner />
+            </div>
           ) : error ? (
             <ErrorMessage message={error} />
           ) : generatedContent && generatedContent.imageUrl ? (

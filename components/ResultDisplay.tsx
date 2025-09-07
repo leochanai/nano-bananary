@@ -116,7 +116,7 @@ const ResultDisplay: React.FC<ResultDisplayProps> = ({ content, onUseAsInput, on
     <div className="w-full h-full flex flex-col items-center gap-4 animate-fade-in">
       {content.imageUrl && originalImageUrl && <ViewSwitcher />}
       
-      <div className="w-full flex-grow relative">
+      <div className="w-full flex-grow relative min-h-[420px]">
         {viewMode === 'result' && content.imageUrl && (
           <div 
             className="w-full h-full relative bg-white dark:bg-black rounded-lg overflow-hidden shadow-inner cursor-pointer group border border-black/10 dark:border-white/10 flex items-center justify-center"
