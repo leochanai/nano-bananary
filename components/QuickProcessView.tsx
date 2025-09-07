@@ -85,6 +85,24 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     { key: 'special', label: t('categories.special'), icon: 'auto_awesome' },
   ];
 
+  // 切换类别时，默认选中该类别下的第一个效果
+  React.useEffect(() => {
+    if (!selectedCategory) return;
+    const list = transformations.filter(t => t.category === selectedCategory);
+    if (list.length === 0) {
+      if (selectedTransformation && selectedTransformation.category !== selectedCategory) {
+        setSelectedTransformation(null);
+      }
+      return;
+    }
+    if (!selectedTransformation || selectedTransformation.category !== selectedCategory) {
+      setSelectedTransformation(list[0]);
+      if (list[0].prompt !== 'CUSTOM') {
+        setCustomPrompt('');
+      }
+    }
+  }, [selectedCategory, transformations, selectedTransformation]);
+
   // Removed mode switching - always multi-mode
 
   const handleSelectTransformation = (transformation: Transformation) => {
