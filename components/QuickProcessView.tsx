@@ -45,7 +45,8 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
   const [maskDataUrl, setMaskDataUrl] = useState<string | null>(null);
   const [customPrompt, setCustomPrompt] = useState<string>('');
   const [activeTool, setActiveTool] = useState<ActiveTool>('none');
-  const [isMultiMode, setIsMultiMode] = useState<boolean>(false);
+  // Always use multi-mode
+  const isMultiMode = true;
 
   // Update selected transformation when preSelectedEffect changes
   React.useEffect(() => {
@@ -71,43 +72,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     { key: 'special', label: t('categories.special'), icon: 'auto_awesome' },
   ];
 
-  const switchToMulti = useCallback(() => {
-    if (isMultiMode) return;
-    let nextImages = images;
-    if (imagePreviewUrl && selectedFile && images.length === 0) {
-      const seeded: UploadedImage = { 
-        id: `${Date.now()}-${Math.random()}`, 
-        file: selectedFile, 
-        dataUrl: imagePreviewUrl 
-      };
-      nextImages = [seeded];
-      setImages(nextImages);
-    }
-    if (nextImages.length > 0) {
-      setActiveIndex(0);
-    } else {
-      setActiveIndex(null);
-    }
-    setMaskDataUrl(null);
-    setActiveTool('none');
-    setGeneratedContent(null);
-    setError(null);
-    setIsMultiMode(true);
-  }, [isMultiMode, imagePreviewUrl, selectedFile, images.length]);
-
-  const switchToSingle = useCallback(() => {
-    if (!isMultiMode) return;
-    const idx = (activeIndex ?? 0);
-    const src = images[idx];
-    if (src) {
-      setSelectedFile(src.file);
-      setImagePreviewUrl(src.dataUrl);
-    } else {
-      setSelectedFile(null);
-      setImagePreviewUrl(null);
-    }
-    setIsMultiMode(false);
-  }, [isMultiMode, images, activeIndex]);
+  // Removed mode switching - always multi-mode
 
   const handleSelectTransformation = (transformation: Transformation) => {
     setSelectedTransformation(transformation);
@@ -144,19 +109,11 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     Promise.all(readers).then(newOnes => {
       setImages(prev => {
         const combined = [...prev, ...newOnes].slice(0, 3);
-        if (!isMultiMode) {
-          const nextActive = combined.length > 0 ? (prev.length === 0 ? 0 : activeIndex ?? 0) : null;
-          setActiveIndex(nextActive);
-          if (nextActive !== null) {
-            setSelectedFile(combined[nextActive].file);
-            setImagePreviewUrl(combined[nextActive].dataUrl);
-          }
-        } else {
-          if (combined.length > 0 && (activeIndex === null || !imagePreviewUrl)) {
-            setActiveIndex(0);
-            setSelectedFile(combined[0].file);
-            setImagePreviewUrl(combined[0].dataUrl);
-          }
+        // Always in multi-mode
+        if (combined.length > 0 && (activeIndex === null || !imagePreviewUrl)) {
+          setActiveIndex(0);
+          setSelectedFile(combined[0].file);
+          setImagePreviewUrl(combined[0].dataUrl);
         }
         return combined;
       });
@@ -165,7 +122,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
       setError(null);
       setActiveTool('none');
     });
-  }, [images.length, activeIndex, isMultiMode, imagePreviewUrl]);
+  }, [images.length, activeIndex, imagePreviewUrl]);
 
   const removeImageAt = useCallback((index: number) => {
     setImages(prev => {
@@ -228,23 +185,16 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
 
     try {
       let result: GeneratedContent;
-      if (isMultiMode) {
-        const prepared = images.map(img => {
-          const mimeType = img.dataUrl.split(';')[0].split(':')[1] ?? 'image/png';
-          const base64 = img.dataUrl.split(',')[1];
-          return { base64, mimeType };
-        });
-        if (prepared.length === 0) {
-          throw new Error(t('errors.uploadAndSelect'));
-        }
-        result = await editImages(prepared, promptToUse);
-      } else {
-        if (!imagePreviewUrl) throw new Error(t('errors.uploadAndSelect'));
-        const mimeType = imagePreviewUrl.split(';')[0].split(':')[1] ?? 'image/png';
-        const base64 = imagePreviewUrl.split(',')[1];
-        const maskBase64 = maskDataUrl ? maskDataUrl.split(',')[1] : null;
-        result = await editImage(base64, mimeType, promptToUse, maskBase64);
+      // Always use multi-mode
+      const prepared = images.map(img => {
+        const mimeType = img.dataUrl.split(';')[0].split(':')[1] ?? 'image/png';
+        const base64 = img.dataUrl.split(',')[1];
+        return { base64, mimeType };
+      });
+      if (prepared.length === 0) {
+        throw new Error(t('errors.uploadAndSelect'));
       }
+      result = await editImages(prepared, promptToUse);
 
       if (result.imageUrl) {
         result.imageUrl = await embedWatermark(result.imageUrl, "Creative Banana");
@@ -260,7 +210,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     } finally {
       setIsLoading(false);
     }
-  }, [selectedTransformation, customPrompt, isMultiMode, images, imagePreviewUrl, maskDataUrl, t, onEffectApplied]);
+  }, [selectedTransformation, customPrompt, images, t, onEffectApplied]);
 
   const handleUseResultAsInput = useCallback(async () => {
     if (!generatedContent?.imageUrl) return;
@@ -293,7 +243,7 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
     setActiveTool(current => (current === 'mask' ? 'none' : 'mask'));
   };
 
-  const hasAnyInput = isMultiMode ? images.length > 0 : !!imagePreviewUrl;
+  const hasAnyInput = images.length > 0;
   const isGenerateDisabled = !hasAnyInput || isLoading || 
     (selectedTransformation?.prompt === 'CUSTOM' && !customPrompt.trim());
 
@@ -334,52 +284,14 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
                 1. {t('upload.clickToUpload')}
               </h3>
               
-              {/* Mode Switch */}
-              <div className="mb-3 flex items-center justify-between">
-                <div className="inline-flex rounded-md overflow-hidden border border-black/10 dark:border-white/10">
-                  <button
-                    onClick={switchToSingle}
-                    className={`px-3 py-1 text-sm transition-colors ${
-                      !isMultiMode 
-                        ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' 
-                        : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {t('upload.singleMode')}
-                  </button>
-                  <button
-                    onClick={switchToMulti}
-                    className={`px-3 py-1 text-sm transition-colors ${
-                      isMultiMode 
-                        ? 'bg-gray-200 text-gray-900 dark:bg-gray-700 dark:text-gray-100' 
-                        : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
-                    }`}
-                  >
-                    {t('upload.multipleMode')}
-                  </button>
-                </div>
-              </div>
-
-              {/* Image Upload */}
-              {isMultiMode ? (
-                <ImageUploader
-                  images={images}
-                  onAdd={addImages}
-                  onRemove={removeImageAt}
-                  max={3}
-                  showSlots
-                />
-              ) : (
-                <ImageEditorCanvas
-                  imageUrl={imagePreviewUrl}
-                  selectedFile={selectedFile}
-                  activeTool={activeTool}
-                  maskData={maskDataUrl}
-                  onImageSelect={handleImageSelect}
-                  onClearImage={handleClearImage}
-                  onMaskUpdate={setMaskDataUrl}
-                />
-              )}
+              {/* Image Upload - Always multi-mode */}
+              <ImageUploader
+                images={images}
+                onAdd={addImages}
+                onRemove={removeImageAt}
+                max={3}
+                showSlots
+              />
             </div>
 
             {/* Step 2: Choose Effect - Only show if image is uploaded */}
@@ -467,21 +379,6 @@ const QuickProcessView: React.FC<QuickProcessViewProps> = ({
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4 border-t border-black/10 dark:border-white/10">
-            {!isMultiMode && (
-              <button
-                onClick={toggleMaskTool}
-                className={`px-4 py-2 rounded-lg font-semibold transition-all duration-200 ${
-                  activeTool === 'mask'
-                    ? 'bg-gradient-to-r from-orange-500 to-yellow-400 text-black'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
-                }`}
-                disabled={!imagePreviewUrl}
-              >
-                <span className="material-symbols-outlined align-middle mr-1">brush</span>
-                {t('actions.drawMask')}
-              </button>
-            )}
-            
             <button
               onClick={handleGenerate}
               disabled={isGenerateDisabled}
